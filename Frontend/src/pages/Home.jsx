@@ -134,8 +134,9 @@ export default function Home() {
                 className="p-2 border rounded-md mb-4 w-80"
             />
 
-            <div className="grid grid-cols-3 gap-6 w-full max-w-7xl">
-                <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="w-full max-w-7xl flex flex-col md:flex-row gap-6">
+                {/* Room List Section */}
+                <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 flex-1 ${selectedRooms.length === 0 ? "mx-auto place-items-center" : ""}`}>
                     {filteredRooms.map((room) => (
                         <div key={room.id} className="flex flex-col border rounded-xl overflow-hidden shadow-md transition hover:scale-105 bg-white">
                             <div className="relative">
@@ -160,36 +161,41 @@ export default function Home() {
                     ))}
                 </div>
 
-                {/* Selected Rooms Section */}
-                <div className="col-span-1 bg-white p-4 rounded-lg shadow-md inline-flex flex-col max-h-fit">
-                    <h2 className="text-lg font-semibold mb-4">Selected Rooms</h2>
-                    {selectedRooms.length > 0 ? (
-                        <>
-                            <div className="space-y-4">
-                                {selectedRooms.map((room) => (
-                                    <div key={room.id} className="flex items-center border p-2 rounded-lg shadow">
-                                        <img src={room.image} alt={room.name} className="w-16 h-16 rounded-md object-cover" />
-                                        <div className="flex-1 ml-3">
-                                            <h4 className="text-sm font-medium">{room.name}</h4>
-                                        </div>
-                                        <button onClick={() => toggleRoomSelection(room)} className="text-red-500 hover:text-red-700">
-                                            <Trash2 />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                            <br />
-                            <p>Start Date: {startDate || "Not selected"} | End Date: {endDate || "Not selected"}</p>
+                {/* Selected Rooms Section (แสดงเฉพาะเมื่อมีการเลือกห้อง) */}
+                {selectedRooms.length > 0 && (
+                    <div className="w-full md:w-80 bg-white p-4 rounded-lg shadow-md flex flex-col items-center self-start">
+                        <h2 className="text-lg font-semibold mb-4 text-center">Selected Rooms</h2>
 
-                            <button className="mt-4 w-full py-2 px-4 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition">
-                                Make Booking
-                            </button>
-                        </>
-                    ) : (
-                        <p className="text-gray-500">No rooms selected</p>
-                    )}
-                </div>
+                        {/* ให้ div ปรับขนาดตามเนื้อหา */}
+                        <div className="space-y-4 overflow-y-auto w-full">
+                            {selectedRooms.map((room) => (
+                                <div key={room.id} className="flex items-center border p-2 rounded-lg shadow w-full">
+                                    <img src={room.image} alt={room.name} className="w-16 h-16 rounded-md object-cover" />
+                                    <div className="flex-1 ml-3">
+                                        <h4 className="text-sm font-medium">{room.name}</h4>
+                                    </div>
+                                    <button onClick={() => toggleRoomSelection(room)} className="text-red-500 hover:text-red-700">
+                                        <Trash2 />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* ใช้ margin แทน <br /> */}
+                        <p className="text-sm text-gray-600 text-center mt-2">
+                            📅 Start: {startDate || "Not selected"} | End: {endDate || "Not selected"}
+                        </p>
+
+                        {/* ปุ่ม Make Booking ติดกับ list */}
+                        <button className="mt-3 w-full py-2 px-4 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition">
+                            Make Booking
+                        </button>
+                    </div>
+                )}
+
             </div>
+
+
             {/* Modal */}
             {roomDetails && (
                 <div className="fixed inset-0 bg-black bg-opacity-10 p-4 flex items-center justify-center z-50">
