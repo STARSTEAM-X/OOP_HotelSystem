@@ -52,10 +52,11 @@ classDiagram
     -__name           :str
     -__type           :str
     -__price          :int
+    -__capacity       :int
     -__image          :str
     -__description    :str
     -__detail         :str
-    -__capacity       :int
+    
     -__booking_history:List[Tuple[datetime, Customer]]
     -__reviews        :list
 
