@@ -1,0 +1,234 @@
+เช็คว่าถูกต้องไหมไม่ต้องเพิ่มอะไรเข้ามาแล้วพร้อมอธิบาย
+
+
+classDiagram
+   class HotelSystem{
+    -__name       :str
+    -__address    :str
+
+    -__rooms      :list
+    -__users      :list
+    -__bookings   :list
+    -__discounts  :list
+    -__feedback   :list
+
+    +get_name() :str
+    +get_address():str
+    +get_all_rooms() :List[Room]
+    +get_all_bookings() :List[Booking]
+    +get_all_reviews() : List[Review]
+    +get_all_feedbacks() :List[Feedback]
+
+    +add_room(room:Room)
+    +add_user(user:User)
+    +add_booking(booking:Booking)
+    +add_discount(discount:Discount)
+    +add_feedback(feedback:Feedback)
+
+    +del_room(room:Room)
+    +del_user(user:User)
+    +del_booking(booking:Booking)
+    +del_discount(discount:Discount)
+    +del_feedback(feedback:Feedback)
+
+    +del_room_by_id(id:str)
+    +del_user_by_id(id:str)
+    +del_discount_by_code(code:str)
+    +del_feedback_by_id(id:str)
+
+    +find_available_room(datein: datetime, dateout: datetime) : List[Room]
+    +find_room_by_id(id:str)
+    +find_user_by_id(id:str)
+    +find_booking_by_id(id:str)
+    +find_discount_by_code(code:str)
+    +find_reviews_by_room_id(room_id:str) : List[Review]
+
+    +update_user(user:User)
+    +authenticate(username,password): bool
+   }
+
+   class Room{
+    -__id             :str
+    -__name           :str
+    -__type           :str
+    -__price          :int
+    -__image          :str
+    -__description    :str
+    -__detail         :str
+    -__capacity       :int
+    -__booking_history:List[Tuple[datetime, Customer]]
+    -__reviews        :list
+
+    +get_id()   :str
+    +get_name() :str
+    +get_type():str
+    +get_price():int
+    +get_image():str
+    +get_description():str
+    +get_detail():str
+    +get_capacity():int
+    +add_review(review: Review)
+    +del_review(review_id: str)
+    +is_available(datein: datetime, dateout: datetime) : bool
+
+    +set_price(new_price:int)
+    +set_capacity(new_capacity:int)
+   }
+
+    class User {
+        -__id          :str
+        -__first_name  :str
+        -__last_name   :str
+        -__username    :str
+        -__password    :str
+        -__email       :str
+        -__role        :str
+
+        +get_id():str
+        +get_first_name():str
+        +get_last_name():str
+        +get_email():str
+        +get_username():str
+        +login(username,password) : bool
+    }
+
+    class Admin{
+        -position         : str
+
+        +get_position():str
+    }
+
+    class Customer{
+        -__selected_room    :List[Room]
+
+        +get_selected_room() : List[Room]
+        +add_selected_room(room: Room)
+        +del_selected_room(room: Room)
+    }
+
+    class Booking{
+        -__id         : Str
+        -__datein     : datein
+        -__dateout    : dateout
+        -__customer   : Customer
+        -__rooms      : list
+        -__price      : int
+        -__final_price: int
+        -__payment    : Payment  || None
+        -__invoice    : Invoice  || None
+        -__status     : str "Unpaid", "Paid", "Cancelled"
+        -__discount           : None || Discount
+
+        +get_id()
+        +get_datein()
+        +get_dateout()
+        +get_customer()
+        +get_rooms()
+        +get_price()
+        +get_payment()
+        +get_invoice()
+        +calculate_days()
+        +update_status()
+        +get_status()
+        +calculate_total_price() : int
+        +confirm_booking()
+        +cancel_booking()
+        +is_confirmed()
+        +apply_discount()
+        +apply_tax(rate: float = 0.07)
+        +get_discount()
+        +update_booking(datein: str, dateout: str, rooms: list)
+    }
+
+    class Payment{
+        -__booking            : Booking
+        -__payment_method     : str
+        -__amount_paid        : float
+        -__payment_date       : datetime
+        -__status             : str "Unpaid", "Paid", "Cancelled"
+        
+        +get_booking()
+        +get_payment_date()
+        +get_payment_method()
+        +get_amount_paid()
+        +make_payment()
+        +cancel_payment()
+        +refund_payment()
+        +update_status()
+        +get_status()
+        +update_payment_method()
+    }
+
+    class Invoice{
+        -__booking: Booking
+        -__invoice_date: datetime
+
+        +generate_invoice()
+        +get_invoice_details()
+    }
+
+    class Discount{
+        -__code                 : str
+        -__type                 : str
+        -__value                : int
+        +get_code()
+        +get_discount_type()
+        +get_discount_value()
+        +apply_discount(price)
+    }
+
+    class Review{
+        -__room_id    : str
+        -__customer   : Customer
+        -__rating     : float
+        -__comment    : str
+        -__date       : datetime
+
+        +get_room_id()
+        +get_customer()
+        +get_rating()
+        +get_comment()
+        +get_date()
+        +update_review(rating, comment)
+        +cancel_review()
+    }
+
+    class Feedback {
+        -__id          : str
+        -__customer    : Customer
+        -__admin       : Admin || None
+        -__comment     : str
+        -__rating      : float
+        -__date        : datetime
+
+        +get_customer()
+        +get_admin()
+        +get_rating()
+        +submit_feedback() : str
+        +get_feedback()    : str
+        +cancel_feedback()
+        +update_feedback(new_comment, new_rating)
+    }
+
+
+    HotelSystem "1" o-- "*" Room
+    HotelSystem "1" o-- "*" Booking
+    HotelSystem "1" o-- "*" Discount
+    HotelSystem "1" o-- "*" Feedback
+    HotelSystem "1" o-- "*" User
+    User <|-- Admin
+    User <|-- Customer
+
+    Customer "0..*" o-- "*" Booking
+    Room "*" --o "*" Booking
+
+    Customer "1" o-- "*" Review
+    Room "0..*" o-- "*" Review
+
+    Booking "1" -- "0..1" Payment
+    Booking "1" -- "0..1" Invoice 
+    Discount "0..1" -- "1" Booking
+
+
+    Customer "1" o-- "*" Feedback
+    Admin "0..*" -- "*" Feedback
