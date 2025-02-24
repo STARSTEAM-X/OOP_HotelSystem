@@ -18,9 +18,10 @@ export default function Invoice() {
 
     return (
         <div className="min-h-screen p-6 flex flex-col items-center">
-            <h1 className="text-2xl font-bold mb-4">🧾 Invoice</h1>
+
 
             <div className="w-full max-w-3xl bg-white p-6 rounded-lg shadow">
+                <h1 className="text-2xl font-bold mb-4">🧾 Invoice</h1>
                 <h2 className="text-xl font-semibold mb-4">Booking Summary</h2>
                 <p className="text-lg">📅 Stay: {startDate} → {endDate}</p>
 
