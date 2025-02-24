@@ -6,7 +6,7 @@ export default function Navbar() {
 
     // Sample user data
     const user = {
-        name: "SSX ツ",
+        name: "STARSTEAM_X ツ",
         avatar: "https://cdn.discordapp.com/attachments/1252629751332474972/1342621093361356940/2.2.png?ex=67bc4715&is=67baf595&hm=6c397f909d8104fffd42d79d9582c7e2f1baf206ba404c1577b774815f4e6793&",
     };
 
@@ -14,9 +14,16 @@ export default function Navbar() {
         <nav className="bg-white text-gray-900 shadow-lg">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center">
                 {/* Logo */}
-                <a href="/" className="text-2xl font-bold text-gray-900">MyLogo</a>
+                <a href="/" className="text-2xl font-bold text-gray-900">HotelSystem</a>
 
-                {/* Hamburger Menu (Mobile) */}
+                {/* Navigation Menu */}
+                <div className="hidden md:flex space-x-6">
+                    <a href="/home" className="text-gray-900 hover:text-indigo-600">Home</a>
+                    <a href="/viewbooking" className="text-gray-900 hover:text-indigo-600">View booking</a>
+                    <a href="/manageroom" className="text-gray-900 hover:text-indigo-600">Management</a>
+                </div>
+
+                {/* Mobile Menu Button */}
                 <button
                     className="md:hidden focus:outline-none"
                     onClick={() => setIsOpen(!isOpen)}
@@ -28,44 +35,43 @@ export default function Navbar() {
                     </svg>
                 </button>
 
-                {/* Menu Items */}
-                <ul className={`md:flex space-x-6 absolute md:static bg-white w-full left-0 md:w-auto md:bg-transparent
-          transition-all duration-300 ease-in-out ${isOpen ? "top-12" : "-top-60"}`}>
-                    <li><a href="/home" className="block px-4 py-2 text-gray-900 hover:text-indigo-600">Home</a></li>
-                    <li><a href="/viewbooking" className="block px-4 py-2 text-gray-900 hover:text-indigo-600">View booking</a></li>
-                    <li><a href="/manageroom" className="block px-4 py-2 text-gray-900 hover:text-indigo-600">Management</a></li>
-                </ul>
+                {/* Mobile Menu */}
+                {isOpen && (
+                    <div className="absolute top-16 left-0 w-full bg-white shadow-md md:hidden">
+                        <a href="/home" className="block px-4 py-2 text-gray-900 hover:bg-gray-100">Home</a>
+                        <a href="/viewbooking" className="block px-4 py-2 text-gray-900 hover:bg-gray-100">View booking</a>
+                        <a href="/manageroom" className="block px-4 py-2 text-gray-900 hover:bg-gray-100">Management</a>
+                    </div>
+                )}
 
                 {/* User Profile Section */}
                 <div className="relative">
                     <button
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
-                        className="flex items-center space-x-2 p-2 rounded-full bg-gray-200 hover:bg-gray-300"
+                        className="flex items-center space-x-2 p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition duration-200"
                     >
                         <img
                             src={user.avatar}
                             alt="User Avatar"
-                            className="w-8 h-8 rounded-full"
+                            className="w-8 h-8 rounded-full border border-gray-300"
                         />
-                        <span className="hidden md:block">{user.name}</span>
+                        <span className="hidden md:block font-medium">{user.name}</span>
                     </button>
 
                     {/* Profile Dropdown */}
-                    {isProfileOpen && (
-                        <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 shadow-lg rounded-md">
-                            <ul>
-                                <li>
-                                    <a href="#" className="block px-4 py-2 text-gray-900 hover:bg-gray-100">Profile</a>
-                                </li>
-                                <li>
-                                    <a href="#" className="block px-4 py-2 text-gray-900 hover:bg-gray-100">Settings</a>
-                                </li>
-                                <li>
-                                    <a href="#" className="block px-4 py-2 text-gray-900 hover:bg-red-600">Logout</a>
-                                </li>
-                            </ul>
-                        </div>
-                    )}
+                    <div className={`absolute left-1/2 transform -translate-x-1/2 mt-2 bg-white border border-gray-200 shadow-lg rounded-md w-48 p-2 z-10 transition-all duration-300 ease-in-out ${isProfileOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}>
+                        <ul className="flex flex-col space-y-1">
+                            <li>
+                                <a href="#" className="block px-4 py-2 text-gray-900 hover:bg-gray-100 rounded transition duration-200">Profile</a>
+                            </li>
+                            <li>
+                                <a href="#" className="block px-4 py-2 text-gray-900 hover:bg-gray-100 rounded transition duration-200">Settings</a>
+                            </li>
+                            <li>
+                                <a href="#" className="block px-4 py-2 text-gray-900 hover:bg-red-600 hover:text-white rounded transition duration-200">Logout</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </nav>

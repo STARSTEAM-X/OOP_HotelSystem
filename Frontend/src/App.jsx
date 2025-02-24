@@ -6,6 +6,10 @@ import Footer from "./components/Footer"
 
 // Pages
 import Home from "./pages/Home";
+import Booking from "./pages/Booking";
+import Payment from "./pages/Payment";
+
+
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import PageNotFound from "./pages/PageNotFound";
@@ -20,6 +24,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/booking" element={<Booking />} />
+        <Route path="/payment" element={<Payment />} />
+
+
+
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="*" element={<PageNotFound />} />

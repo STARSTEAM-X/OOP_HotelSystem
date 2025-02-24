@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const roomsData = [
     {
@@ -66,6 +67,9 @@ export default function Home() {
     const [endDate, setEndDate] = useState("");
     const [selectedRooms, setSelectedRooms] = useState([]);
     const [roomDetails, setRoomDetails] = useState(null);
+    const [showWarningModal, setShowWarningModal] = useState(false);
+
+    const navigate = useNavigate();
 
     const time = new Date();
     time.setHours(0, 0, 0, 0);
@@ -103,6 +107,22 @@ export default function Home() {
             handleCloseDetail();
         }
     }, [roomDetails, toggleRoomSelection, handleCloseDetail]);
+
+    const handleMakeBooking = () => {
+        if (!startDate || !endDate) {
+            setShowWarningModal(true);
+            return;
+        }
+
+        // ✅ ไปที่หน้า Booking และส่งข้อมูลห้องที่เลือกไปด้วย
+        navigate("/booking", {
+            state: {
+                selectedRooms,
+                startDate,
+                endDate
+            }
+        });
+    };
 
     return (
         <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center">
@@ -188,14 +208,7 @@ export default function Home() {
 
                         {/* ปุ่ม Make Booking ติดกับ list */}
                         <button
-                            onClick={() => {
-                                if (!startDate || !endDate) {
-                                    alert("Please select both start and end dates before making a booking.");
-                                    return;
-                                }
-                                // ดำเนินการต่อ เช่น พาไปหน้าจองห้องพัก
-                                console.log("Proceed to booking...");
-                            }}
+                            onClick={handleMakeBooking}
                             className="mt-3 w-full py-2 px-4 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
                         >
                             Make Booking
@@ -204,6 +217,23 @@ export default function Home() {
                 )}
 
             </div>
+
+            {/* 🔹 Modal แจ้งเตือน */}
+            {showWarningModal && (
+                <div className="fixed inset-0 bg-black/80 p-4 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg w-120 max-w-full shadow-lg relative text-center">
+                        <h3 className="text-lg font-semibold">⚠️ Booking Error</h3>
+                        <p className="mt-2 text-gray-700">Please select both start and end dates before making a booking.</p>
+                        <button
+                            onClick={() => setShowWarningModal(false)} // ปิด Modal
+                            className="mt-4 py-3 px-6 w-full text-lg font-semibold bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition"
+                        >
+                            OK
+                        </button>
+
+                    </div>
+                </div>
+            )}
 
             {/* Modal */}
             {roomDetails && (
