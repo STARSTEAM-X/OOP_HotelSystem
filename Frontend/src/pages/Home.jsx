@@ -36,6 +36,13 @@ export default function Home() {
     const [selectedRooms, setSelectedRooms] = useState([]);
     const [roomDetails, setRoomDetails] = useState(null);
     const [showWarningModal, setShowWarningModal] = useState(false);
+    const [showDateWarning, setShowDateWarning] = useState(false);
+
+    useEffect(() => {
+        // ล้างรายการห้องที่เลือกเมื่อมีการเปลี่ยนแปลงวันที่
+        setSelectedRooms([]);
+        localStorage.setItem("selectedRooms", JSON.stringify([]));
+    }, [startDate, endDate]);
 
     const navigate = useNavigate();
 
@@ -53,13 +60,20 @@ export default function Home() {
     }, [search]);
 
     const toggleRoomSelection = useCallback((room) => {
+        if (!startDate || !endDate) {
+            setShowDateWarning(true); // เปิด Modal
+            return;
+        }
+
         const updatedSelectedRooms = selectedRooms.some((selectedRoom) => selectedRoom.id === room.id)
             ? selectedRooms.filter((selectedRoom) => selectedRoom.id !== room.id)
             : [...selectedRooms, room];
 
         setSelectedRooms(updatedSelectedRooms);
         localStorage.setItem("selectedRooms", JSON.stringify(updatedSelectedRooms));
-    }, [selectedRooms]);
+    }, [selectedRooms, startDate, endDate]);
+
+
 
     const handleViewDetail = useCallback((room) => {
         setRoomDetails(room);
@@ -93,7 +107,7 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center">
+        <div className="min-h-screen p-6 flex flex-col items-center">
             <h1 className="text-2xl font-bold mb-4">Select Rooms</h1>
 
             {/* Input ค้นหา & วันที่ */}
@@ -199,6 +213,21 @@ export default function Home() {
                             OK
                         </button>
 
+                    </div>
+                </div>
+            )}
+
+            {showDateWarning && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black/80">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+                        <h2 className="text-xl font-semibold mb-4 text-red-600">⚠️ Warning</h2>
+                        <p className="text-gray-700">Please select both check-in and check-out dates before choosing a room.</p>
+                        <button
+                            onClick={() => setShowDateWarning(false)}
+                            className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                        >
+                            OK
+                        </button>
                     </div>
                 </div>
             )}

@@ -43,11 +43,12 @@ export default function Booking() {
     };
 
     return (
-        <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center">
-            <h1 className="text-2xl font-bold mb-4">Confirm Booking</h1>
-            <p className="text-lg">📅 Stay: {startDate} → {endDate}</p>
+        <div className="min-h-screen p-6  flex flex-col items-center">
+
 
             <div className="w-full max-w-3xl bg-white p-6 rounded-lg shadow">
+                <h1 className="text-2xl font-bold mb-4">Confirm Booking</h1>
+                <p className="text-lg">📅 Stay: {startDate} → {endDate}</p>
                 {selectedRooms.map((room) => (
                     <div key={room.id} className="flex items-center border-b py-3">
                         <img src={room.image} alt={room.name} className="w-16 h-16 rounded-md object-cover" />

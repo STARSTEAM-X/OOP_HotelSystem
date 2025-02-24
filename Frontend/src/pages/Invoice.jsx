@@ -17,7 +17,7 @@ export default function Invoice() {
     }
 
     return (
-        <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center">
+        <div className="min-h-screen p-6 flex flex-col items-center">
             <h1 className="text-2xl font-bold mb-4">🧾 Invoice</h1>
 
             <div className="w-full max-w-3xl bg-white p-6 rounded-lg shadow">

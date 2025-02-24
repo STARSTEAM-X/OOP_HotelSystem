@@ -19,7 +19,7 @@ export default function Navbar() {
                 {/* Navigation Menu */}
                 <div className="hidden md:flex space-x-6">
                     <a href="/home" className="text-gray-900 hover:text-indigo-600">Home</a>
-                    <a href="/viewbooking" className="text-gray-900 hover:text-indigo-600">View booking</a>
+                    <a href="/viewbooking" className="text-gray-900 hover:text-indigo-600">View Booking</a>
                     <a href="/manageroom" className="text-gray-900 hover:text-indigo-600">Management</a>
                 </div>
 

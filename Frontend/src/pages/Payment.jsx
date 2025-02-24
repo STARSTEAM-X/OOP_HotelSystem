@@ -55,7 +55,7 @@ export default function Payment() {
     };
 
     return (
-        <div className="min-h-screen p-6 bg-gray-100 flex flex-col items-center">
+        <div className="min-h-screen p-6 flex flex-col items-center">
             <h1 className="text-2xl font-bold mb-4">💳 Payment</h1>
 
             <p className="text-lg">📅 Stay: {startDate} → {endDate}</p>

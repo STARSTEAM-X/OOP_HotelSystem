@@ -9,6 +9,8 @@ import Home from "./pages/Home";
 import Booking from "./pages/Booking";
 import Payment from "./pages/Payment";
 import Invoice from "./pages/Invoice";
+import ViewBooking from "./pages/ViewBooking";
+
 
 
 import Register from "./pages/Register";
@@ -28,6 +30,8 @@ function App() {
         <Route path="/booking" element={<Booking />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/invoice" element={<Invoice />} />
+        <Route path="/viewbooking" element={<ViewBooking />} />
+
 
 
         <Route path="/register" element={<Register />} />
