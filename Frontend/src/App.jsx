@@ -8,6 +8,7 @@ import Footer from "./components/Footer"
 import Home from "./pages/Home";
 import Booking from "./pages/Booking";
 import Payment from "./pages/Payment";
+import Invoice from "./pages/Invoice";
 
 
 import Register from "./pages/Register";
@@ -26,7 +27,7 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/payment" element={<Payment />} />
-
+        <Route path="/invoice" element={<Invoice />} />
 
 
         <Route path="/register" element={<Register />} />
