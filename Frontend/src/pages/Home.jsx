@@ -67,9 +67,9 @@ export default function Home() {
     const [selectedRooms, setSelectedRooms] = useState([]);
     const [roomDetails, setRoomDetails] = useState(null);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const minDate = today.toISOString().split("T")[0];
+    const time = new Date();
+    time.setHours(0, 0, 0, 0);
+    const minDate = time.toLocaleDateString("sv-SE")
 
     useEffect(() => {
         const savedRooms = JSON.parse(localStorage.getItem("selectedRooms")) || [];
@@ -187,7 +187,17 @@ export default function Home() {
                         </p>
 
                         {/* ปุ่ม Make Booking ติดกับ list */}
-                        <button className="mt-3 w-full py-2 px-4 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition">
+                        <button
+                            onClick={() => {
+                                if (!startDate || !endDate) {
+                                    alert("Please select both start and end dates before making a booking.");
+                                    return;
+                                }
+                                // ดำเนินการต่อ เช่น พาไปหน้าจองห้องพัก
+                                console.log("Proceed to booking...");
+                            }}
+                            className="mt-3 w-full py-2 px-4 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
+                        >
                             Make Booking
                         </button>
                     </div>
