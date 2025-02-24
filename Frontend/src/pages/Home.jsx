@@ -195,10 +195,9 @@ export default function Home() {
 
             </div>
 
-
             {/* Modal */}
             {roomDetails && (
-                <div className="fixed inset-0 bg-black bg-opacity-10 p-4 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/80 p-4 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg w-96 max-w-full shadow-lg relative">
                         <h3 className="text-xl font-semibold">{roomDetails.name} - Details</h3>
                         <p className="mt-2">{roomDetails.details}</p>
