@@ -51,6 +51,9 @@ class Room:
                 return False
         return True
 
+    def add_booking(self, datein: datetime, dateout: datetime):
+        self.__booking_history.append((datein, dateout))
+
     def set_price(self, new_price: int):
         self.__price = new_price
         return f"Room price updated to {new_price} USD."
@@ -58,7 +61,7 @@ class Room:
     def set_capacity(self, new_capacity: int):
         self.__capacity = new_capacity
         return f"Room capacity updated to {new_capacity} people."
-
+    
 
 class User:
     def __init__(self, id: str, first_name: str, last_name: str, username: str, password: str, email: str, role: str):
@@ -89,7 +92,7 @@ class User:
         if self.__username == username and self.__password == password:
             return True
         return False
-
+    
 
 class Admin(User):
     def __init__(self, id: str, first_name: str, last_name: str, username: str, password: str, email: str, position: str):
@@ -99,9 +102,53 @@ class Admin(User):
     def get_position(self) -> str:
         return self.__position
 
+    # Manage Rooms
     def add_room(self, hotel_system, room: Room):
         return hotel_system.add_room(room)
 
+    def edit_room(self, hotel_system, room: Room):
+        return hotel_system.update_room(room)
+
+    def delete_room(self, hotel_system, room: Room):
+        return hotel_system.del_room(room)
+
+    def view_rooms(self, hotel_system):
+        return hotel_system.get_all_rooms()
+
+    # View All Bookings
+    def view_all_bookings(self, hotel_system):
+        return hotel_system.get_all_bookings()
+
+    # Manage Users
+    def add_user(self, hotel_system, user: User):
+        return hotel_system.add_user(user)
+
+    def edit_user(self, hotel_system, user: User):
+        return hotel_system.update_user(user)
+
+    def delete_user(self, hotel_system, user: User):
+        return hotel_system.del_user(user)
+
+    def view_users(self, hotel_system):
+        return hotel_system.get_all_users()
+
+    # Manage Discounts
+    def add_discount(self, hotel_system, discount):
+        return hotel_system.add_discount(discount)
+
+    def edit_discount(self, hotel_system, discount):
+        return hotel_system.update_discount(discount)
+
+    def delete_discount(self, hotel_system, discount):
+        return hotel_system.del_discount(discount)
+
+    def view_discounts(self, hotel_system):
+        return hotel_system.get_all_discounts()
+
+    # View Feedback
+    def view_feedback(self, hotel_system):
+        return hotel_system.get_all_feedbacks()
+    
 
 class Customer(User):
     def __init__(self, id: str, first_name: str, last_name: str, username: str, password: str, email: str):
@@ -119,6 +166,42 @@ class Customer(User):
         self.__selected_room = [r for r in self.__selected_room if r.get_id() != room.get_id()]
         return f"Room '{room.get_name()}' removed from selected rooms."
 
+    def search_available_rooms(self, hotel_system, datein: datetime, dateout: datetime):
+        return hotel_system.find_available_room(datein, dateout)
+
+    def make_booking(self, hotel_system, datein: datetime, dateout: datetime):
+        booking = Booking(str(len(hotel_system.get_all_bookings()) + 1), datein, dateout, self)
+        hotel_system.add_booking(booking)
+        for room in self.__selected_room:
+            room.add_booking(datein, dateout)
+        return "Booking made successfully."
+
+    def make_payment(self, booking, payment_method: str, amount_paid: float):
+        payment = Payment(booking, payment_method, amount_paid, datetime.now())
+        booking.confirm_booking()
+        return payment.make_payment()
+
+    def view_bookings(self, hotel_system):
+        return [booking for booking in hotel_system.get_all_bookings() if booking.get_customer().get_id() == self.get_id()]
+
+    def cancel_booking(self, hotel_system, booking):
+        booking.cancel_booking()
+        hotel_system.del_booking(booking)
+        return "Booking cancelled successfully."
+
+    def add_review(self, room: Room, rating: float, comment: str):
+        review = Review(room.get_id(), self, rating, comment, datetime.now())
+        room.add_review(review)
+        return "Review added successfully."
+
+    def add_feedback(self, hotel_system, comment: str, rating: float):
+        feedback = Feedback(str(len(hotel_system.get_all_feedbacks()) + 1), self, None, comment, rating, datetime.now())
+        hotel_system.add_feedback(feedback)
+        return "Feedback added successfully."
+    
+    def set_email(self, email: str):
+        self.__email = email
+        return f"Email updated to {email}."
 
 class Booking:
     def __init__(self, id: str, datein: datetime, dateout: datetime, customer: Customer, status: str = "Unpaid", discount = None):
@@ -202,7 +285,7 @@ class Booking:
         self.__dateout = dateout
         self.__rooms = rooms
         return "Booking dates and rooms updated."
-
+    
 
 class Payment:
     def __init__(self, booking: Booking, payment_method: str, amount_paid: float, payment_date: datetime, status: str = "Unpaid"):
@@ -246,7 +329,7 @@ class Payment:
     def update_payment_method(self, method: str):
         self.__payment_method = method
         return f"Payment method updated to {method}."
-
+    
 
 class Invoice:
     def __init__(self, booking: Booking, invoice_date: datetime):
@@ -258,7 +341,6 @@ class Invoice:
 
     def get_invoice_details(self):
         return f"Invoice for Booking ID: {self.__booking.get_id()} on {self.__invoice_date}"
-
 
 class Discount:
     def __init__(self, code: str, discount_type: str, value: int):
@@ -315,6 +397,8 @@ class Review:
         return "Review cancelled."
 
 
+from datetime import datetime
+
 class Feedback:
     def __init__(self, id: str, customer: Customer, admin, comment: str, rating: float, date: datetime):
         self.__id = id
@@ -346,7 +430,7 @@ class Feedback:
         self.__comment = new_comment
         self.__rating = new_rating
         return "Feedback updated successfully."
-
+    
 
 class HotelSystem:
     def __init__(self, name: str, address: str):
@@ -365,26 +449,33 @@ class HotelSystem:
         return f"Hotel Address: {self.__address}"
 
     def get_all_rooms(self):
-        return [room.get_name() for room in self.__rooms]
+        return self.__rooms
     
     def get_all_users(self):
-        return [user.get_username() for user in self.__users]
+        return self.__users
 
     def get_all_bookings(self):
-        return [booking.get_id() for booking in self.__bookings]
+        return self.__bookings
 
     def get_all_reviews(self):
-        reviews = []
-        for room in self.__rooms:
-            reviews.extend(room._Room__reviews)
-        return [review.get_comment() for review in reviews]
+        return self.__reviews
 
     def get_all_feedbacks(self):
-        return [feedback.get_feedback() for feedback in self.__feedback]
+        return self.__feedback
+    
+    def get_all_discounts(self):
+        return self.__discounts
 
     def add_room(self, room: Room):
         self.__rooms.append(room)
         return f"Room '{room.get_name()}' added to the hotel."
+
+    def update_room(self, room: Room):
+        for i, r in enumerate(self.__rooms):
+            if r.get_id() == room.get_id():
+                self.__rooms[i] = room
+                return f"Room '{room.get_name()}' updated."
+        return f"Room with ID '{room.get_id()}' not found."
 
     def add_user(self, user: User):
         self.__users.append(user)
@@ -453,19 +544,19 @@ class HotelSystem:
     def find_user_by_id(self, id: str):
         for user in self.__users:
             if user.get_id() == id:
-                return user.get_username()
+                return user
         return f"No user found with ID '{id}'"
 
     def find_booking_by_id(self, id: str):
         for booking in self.__bookings:
             if booking.get_id() == id:
-                return booking.get_id()
+                return booking
         return f"No booking found with ID '{id}'"
 
     def find_discount_by_code(self, code: str):
         for discount in self.__discounts:
             if discount.get_code() == code:
-                return discount.get_code()
+                return discount
         return f"No discount found with code '{code}'"
 
     def find_reviews_by_room_id(self, room_id: str):
@@ -479,53 +570,153 @@ class HotelSystem:
             if u.get_id() == user.get_id():
                 self.__users[i] = user
                 return f"User '{user.get_username()}' updated successfully."
+            
+    def update_discount(self, discount: Discount):
+        for i, d in enumerate(self.__discounts):
+            if d.get_code() == discount.get_code():
+                self.__discounts[i] = discount
+                return f"Discount '{discount.get_code()}' updated successfully."
+        return f"Discount with code '{discount.get_code()}' not found."
 
     def authenticate(self, username: str, password: str) -> bool:
         for user in self.__users:
             if user.login(username, password):
                 return f"User '{username}' authenticated successfully."
         return f"Authentication failed for user '{username}'."
-    
-def main():
-    print("Creating a hotel system...")
-    hotel = HotelSystem("Grand Hotel", "1234 Hotel Street")
 
-    print("\nCreating rooms...")
-    room1 = Room("1", "Standard Room", "Standard", 100, 2, "standard.jpg", "A standard room with basic amenities.", "This room is perfect for a short stay.")
-    room2 = Room("2", "Deluxe Room", "Deluxe", 150, 4, "deluxe.jpg", "A deluxe room with additional amenities.", "This room is perfect for a luxurious stay.")
 
-    print("Create Admin and Customer...")
-    admin1 = Admin(F"ADMIN_{len([x for x in hotel.get_all_users() if x.id[0:5] == "ADMIN"])}", "John", "Doe", "admin1", "password","email", "Manager")
-    customer1 = Customer(F"Customer_{len([ x for x in hotel.get_all_users() if x.id[0:7] == "Customer"])}", "Alice", "Smith", "alice", "password", "email")
-    customer2 = Customer(F"Customer_{len([ x for x in hotel.get_all_users() if x.id[0:7] == "Customer"])}", "Bob", "Johnson", "bob", "password", "email")
 
-    print("add addmin and customer to the hotel system...")
-    print(hotel.add_user(admin1))
-    print(hotel.add_user(customer1))
-    print(hotel.add_user(customer2))
+## User Operations
 
-    print("\nAdding rooms to the hotel...")
-    print(admin1.add_room(hotel,room1))
-    print(admin1.add_room(hotel,room2))
+### 1. User Registration
+hotel_system = HotelSystem("Example Hotel", "123 Example Street")
 
-    print("\nFinding available rooms for a given date range...")
-    print(hotel.find_available_room(datetime(2022, 1, 1), datetime(2022, 1, 5)))
+# Register a new customer
+new_customer = Customer("1", "John", "Doe", "johndoe", "password123", "johndoe@example.com")
+hotel_system.add_user(new_customer)
 
-    print("\nAdding selected rooms to a customer...")
-    print(customer1.add_selected_room(room1))
-    print(customer1.add_selected_room(room2))
+### 2. User Login
 
-    print("Booking a room...")
-    booking1 = Booking(F"BOOKING_{len([x for x in hotel.get_all_bookings()])}", datetime(2022, 1, 1), datetime(2022, 1, 5), customer1)
-    print(booking1)
+# Authenticate user
+is_authenticated = hotel_system.authenticate("johndoe", "password123")
+print(is_authenticated)  # Output: User 'johndoe' authenticated successfully.
 
-    print("\nAdding a booking to the hotel system...")
-    print(hotel.add_booking(booking1))
+# To search for available rooms within a date range:
+from datetime import datetime
+datein = datetime(2025, 3, 1)
+dateout = datetime(2025, 3, 5)
+available_rooms = new_customer.search_available_rooms(hotel_system, datein, dateout)
+print(available_rooms)  # Output: List of available room names
 
-    print("\npayment...")
+### 4. Select Room
+# To select a room for booking:
 
-    print("\nUpdating the booking status...")
-    print(booking1.update_status("Confirmed"))
+# Assuming room1 is an instance of Room
+room1 = Room("101", "Deluxe Room", "Deluxe", 100, 2, "image_url", "A deluxe room", "Room details")
+new_customer.add_selected_room(room1)
 
-if __name__ == "__main__":
-    main()  # ทดสอบโค้ด
+### 5. Make Booking
+# To make a booking with the selected rooms:
+booking_message = new_customer.make_booking(hotel_system, datein, dateout)
+print(booking_message)  # Output: Booking made successfully.
+
+### 6. Make Payment
+# To make a payment for a booking:
+booking = hotel_system.find_booking_by_id("1")  # Assuming booking ID is 1
+payment_message = new_customer.make_payment(booking, "Credit Card", 500)
+print(payment_message)  # Output: Payment made successfully.
+
+### 7. View Bookings
+# To view all bookings of the user:
+user_bookings = new_customer.view_bookings(hotel_system)
+print(user_bookings)  # Output: List of booking IDs
+
+### 8. Cancel Booking
+# To cancel a booking:
+cancel_message = new_customer.cancel_booking(hotel_system, booking)
+print(cancel_message)  # Output: Booking cancelled successfully.
+
+### 9. Review Room
+# To add a review for a room:
+review_message = new_customer.add_review(room1, 4.5, "Great room!")
+print(review_message)  # Output: Review added successfully.
+
+### 10. Provide Feedback
+# To provide feedback for the hotel:
+feedback_message = new_customer.add_feedback(hotel_system, "Excellent service!", 5.0)
+print(feedback_message)  # Output: Feedback added successfully.
+
+
+
+
+## Admin Operations
+### 1. Add Room
+# To add a new room to the hotel system:
+admin = Admin("admin1", "Jane", "Smith", "adminjane", "adminpass", "adminjane@example.com", "Manager")
+add_room_message = admin.add_room(hotel_system, room1)
+print(add_room_message)  # Output: Room 'Deluxe Room' added to the hotel.
+
+room1.set_price(120)
+edit_room_message = admin.edit_room(hotel_system, room1)
+print(edit_room_message)  # Output: Room 'Deluxe Room' updated.
+
+### 3. Delete Room
+# To delete a room from the hotel system:
+delete_room_message = admin.delete_room(hotel_system, room1)
+print(delete_room_message)  # Output: Room 'Deluxe Room' removed from the hotel.
+
+### 4. View All Bookings
+# To view all bookings in the hotel system:
+all_bookings = admin.view_all_bookings(hotel_system)
+print(all_bookings)  # Output: List of all booking IDs
+
+### 5. Manage Customer
+# To manage Customer including adding, editing, deleting, and viewing users:
+new_user = Customer("2", "Alice", "Brown", "alicebrown", "password456", "alicebrown@example.com")
+add_user_message = admin.add_user(hotel_system, new_user)
+print(add_user_message)
+
+### 6. Edit Customer
+# Edit an existing Customer
+new_user.set_email("newalicebrown@example.com")
+edit_user_message = admin.edit_user(hotel_system, new_user)
+print(edit_user_message)  # Output: User 'alicebrown' updated successfully.
+
+#### Delete User
+# Delete a user
+delete_user_message = admin.delete_user(hotel_system, new_user)
+print(delete_user_message)  # Output: User 'alicebrown' removed from the hotel system.
+
+#### View Users
+# View all users
+users = admin.view_users(hotel_system)
+print(users)  # Output: List of all usernames
+
+### 4. Manage Discounts
+#### Add Discount
+# Add a new discount
+new_discount = Discount("DISCOUNT10", "percentage", 10)
+add_discount_message = admin.add_discount(hotel_system, new_discount)
+print(add_discount_message)  # Output: Discount code 'DISCOUNT10' added.
+
+#### Edit Discount
+# Edit an existing discount
+new_discount = Discount("DISCOUNT10", "percentage", 15)
+edit_discount_message = admin.edit_discount(hotel_system, new_discount)
+print(edit_discount_message)  # Output: Discount 'DISCOUNT10' updated successfully.
+
+#### Delete Discount
+# Delete a discount
+# delete_discount_message = admin.delete_discount(hotel_system, new_discount)
+# print(delete_discount_message)  # Output: Discount code 'DISCOUNT10' removed.
+
+#### View Discounts
+# View all discounts
+discounts = admin.view_discounts(hotel_system)
+print(discounts)  # Output: List of all discount codes
+
+### 5. View Feedback
+# To view all feedback in the hotel system:
+# View all feedback
+feedbacks = admin.view_feedback(hotel_system)
+print(feedbacks)  # Output: List of all feedback comments

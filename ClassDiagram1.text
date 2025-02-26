@@ -1,5 +1,3 @@
-เช็คว่าถูกต้องไหมไม่ต้องเพิ่มอะไรเข้ามาแล้วพร้อมอธิบาย
-
 
 classDiagram
    class HotelSystem{
@@ -52,11 +50,10 @@ classDiagram
     -__name           :str
     -__type           :str
     -__price          :int
-    -__capacity       :int
     -__image          :str
     -__description    :str
     -__detail         :str
-    
+    -__capacity       :int
     -__booking_history:List[Tuple[datetime, Customer]]
     -__reviews        :list
 
@@ -109,8 +106,8 @@ classDiagram
 
     class Booking{
         -__id         : Str
-        -__datein     : datein
-        -__dateout    : dateout
+        -__datein     : Str
+        -__dateout    : Str
         -__customer   : Customer
         -__rooms      : list
         -__price      : int
