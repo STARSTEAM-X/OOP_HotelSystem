@@ -2,32 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const roomsData = [
-    {
-        id: 1,
-        name: "Deluxe Room",
-        price: 200,
-        image: "https://cdn.discordapp.com/attachments/1252629751332474972/1342621093361356940/2.2.png?ex=67bc4715&is=67baf595&hm=6c397f909d8104fffd42d79d9582c7e2f1baf206ba404c1577b774815f4e6793&",
-        description: "A luxurious room with a beautiful view and modern amenities.",
-        details: "This room includes a king-size bed, a walk-in closet, a balcony, and a jacuzzi."
-    },
-    {
-        id: 2,
-        name: "Suite Room",
-        price: 150,
-        image: "https://cdn.discordapp.com/attachments/1252629751332474972/1342621093361356940/2.2.png?ex=67bc4715&is=67baf595&hm=6c397f909d8104fffd42d79d9582c7e2f1baf206ba404c1577b774815f4e6793&",
-        description: "A spacious suite with a living area and premium facilities.",
-        details: "Includes a spacious living area, minibar, and a private balcony with sea view."
-    },
-    {
-        id: 3,
-        name: "Standard Room",
-        price: 100,
-        image: "https://cdn.discordapp.com/attachments/1252629751332474972/1342621093361356940/2.2.png?ex=67bc4715&is=67baf595&hm=6c397f909d8104fffd42d79d9582c7e2f1baf206ba404c1577b774815f4e6793&",
-        description: "Comfortable and affordable room with all basic amenities.",
-        details: "This room offers a cozy bed, a desk for work, and a flat-screen TV."
-    },
-];
+import axios from "axios"; // Import axios
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -37,6 +12,24 @@ export default function Home() {
     const [roomDetails, setRoomDetails] = useState(null);
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [showDateWarning, setShowDateWarning] = useState(false);
+    const [roomsData, setRoomsData] = useState([]);
+
+    // Fetch room data when startDate and endDate are available
+    useEffect(() => {
+        if (startDate && endDate) {
+            axios
+                .post("http://127.0.0.1:5000/api/get_available_rooms", {
+                    checkin: startDate,
+                    checkout: endDate,
+                })
+                .then((response) => {
+                    setRoomsData(response.data); // Set the fetched data to state
+                })
+                .catch((error) => {
+                    console.error("Error fetching rooms data:", error);
+                });
+        }
+    }, [startDate, endDate]);
 
     useEffect(() => {
         // ล้างรายการห้องที่เลือกเมื่อมีการเปลี่ยนแปลงวันที่
@@ -56,8 +49,12 @@ export default function Home() {
     }, []);
 
     const filteredRooms = useMemo(() => {
-        return roomsData.filter((room) => room.name.toLowerCase().includes(search.toLowerCase()));
-    }, [search]);
+        return (roomsData || []).filter((room) =>
+            room.name?.toLowerCase().includes(search.toLowerCase())
+        );
+    }, [search, roomsData]);
+
+
 
     const toggleRoomSelection = useCallback((room) => {
         if (!startDate || !endDate) {
@@ -72,8 +69,6 @@ export default function Home() {
         setSelectedRooms(updatedSelectedRooms);
         localStorage.setItem("selectedRooms", JSON.stringify(updatedSelectedRooms));
     }, [selectedRooms, startDate, endDate]);
-
-
 
     const handleViewDetail = useCallback((room) => {
         setRoomDetails(room);

@@ -397,8 +397,6 @@ class Review:
         return "Review cancelled."
 
 
-from datetime import datetime
-
 class Feedback:
     def __init__(self, id: str, customer: Customer, admin, comment: str, rating: float, date: datetime):
         self.__id = id
@@ -617,7 +615,6 @@ is_authenticated = hotel_system.authenticate("johndoe", "password123")
 print(is_authenticated)  # Output: User 'johndoe' authenticated successfully.
 
 # To search for available rooms within a date range:
-from datetime import datetime
 datein = datetime(2025, 3, 1)
 dateout = datetime(2025, 3, 5)
 available_rooms = new_customer.search_available_rooms(hotel_system, datein, dateout)

@@ -235,15 +235,18 @@ classDiagram
     User <|-- Customer
     User <|-- Admin
 
+
     Customer "1" --> "*" Booking
     Booking "1" --> "*" Room
     
     Customer "1" --> "*" Review
     
+
     Booking "1" --> "0..1" Payment
     Booking "1" --> "0..1" Invoice 
     Discount "0..1" <-- "1" Booking
 
     Payment "1" --> "1" Invoice
+
 
     Admin "1" --> "1" HotelSystem
