@@ -1,0 +1,252 @@
+classDiagram
+   class HotelSystem{
+    -__name       :str
+    -__address    :str
+
+    -__rooms      :list
+    -__users      :list
+    -__bookings   :list
+    -__discounts  :list
+    -__feedback   :list
+    -__reviews    :list
+
+    +get_name() :str
+    +get_address():str
+    +get_all_rooms() :List[Room]
+    +get_all_bookings() :List[Booking]
+    +get_all_reviews() : List[Review]
+    +get_all_feedbacks() :List[Feedback]
+
+    +add_room(room:Room)
+    +add_user(user:User)
+    +add_booking(booking:Booking)
+    +add_discount(discount:Discount)
+    +add_feedback(feedback:Feedback)
+    +add_review(review:Review)
+
+    +del_room(room:Room)
+    +del_user(user:User)
+    +del_booking(booking:Booking)
+    +del_discount(discount:Discount)
+    +del_feedback(feedback:Feedback)
+    +del_review(review:Review)
+
+    +del_room_by_id(id:str)
+    +del_user_by_id(id:str)
+    +del_discount_by_code(code:str)
+    +del_feedback_by_id(id:str)
+    +del_review_by_id(id:str)
+
+    +find_available_room(datein: datetime, dateout: datetime) : List[Room]
+    +find_room_by_id(id:str)
+    +find_user_by_id(id:str)
+    +find_booking_by_id(id:str)
+    +find_discount_by_code(code:str)
+    +find_reviews_by_room_id(room_id:str) : List[Review]
+
+    +update_user(user:User)
+    +authenticate(username,password): bool
+   }
+
+   class Room {
+        - __id              : string
+        - __name            : string
+        - __type            : string
+        - __price           : int
+        - __capacity        : int
+        - __image           : string
+        - __description     : string
+        - __detail          : string
+        - __booking_history : list
+        - __reviews         : list
+        + get_id()
+        + get_name()
+        + get_type()
+        + get_price()
+        + get_image()
+        + get_description()
+        + get_detail()
+        + get_capacity()
+        + add_review(review)
+        + del_review(review_id)
+        + is_available(datein, dateout)
+        + add_booking(datein, dateout)
+        + set_price(new_price)
+        + set_capacity(new_capacity)
+    }
+
+    class User {
+        - __id          : string
+        - __first_name  : string
+        - __last_name   : string
+        - __username    : string
+        - __password    : string
+        - __email       : string
+        - __role        : string
+        + get_id()
+        + get_first_name()
+        + get_last_name()
+        + get_email()
+        + get_username()
+        + login(username, password)
+    }
+
+    class Admin {
+        - __position    : string
+        + get_position() 
+        + add_room(hotel_system, room)
+        + edit_room(hotel_system, room)
+        + delete_room(hotel_system, room)
+        + view_rooms(hotel_system)
+        + view_all_bookings(hotel_system)
+        + add_user(hotel_system, user)
+        + edit_user(hotel_system, user)
+        + delete_user(hotel_system, user)
+        + view_users(hotel_system)
+        + add_discount(hotel_system, discount)
+        + edit_discount(hotel_system, discount)
+        + delete_discount(hotel_system, discount)
+        + view_discounts(hotel_system)
+        + view_feedback(hotel_system)
+    }
+
+    class Customer {
+        - __selected_room       : list 
+        + get_selected_room()
+        + add_selected_room(room)
+        + del_selected_room(room)
+        + search_available_rooms(hotel_system, datein, dateout)
+        + make_booking(hotel_system, datein, dateout)
+        + make_payment(booking, payment_method, amount_paid)
+        + view_bookings(hotel_system)
+        + cancel_booking(hotel_system, booking)
+        + add_review(room, rating, comment)
+        + add_feedback(hotel_system, comment, rating)
+        + set_email(email)
+    }
+
+    class Booking {
+        - __id          : string 
+        - __datein      : datetime 
+        - __dateout     : datetime 
+        - __customer    : Customer 
+        - __rooms : list 
+        - __price : int 
+        - __final_price : int 
+        - __status : string 
+        - __payment : Payment 
+        - __invoice : Invoice 
+        + get_id()
+        + get_datein()
+        + get_dateout()
+        + get_customer()
+        + get_rooms()
+        + get_price()
+        + get_payment()
+        + get_invoice()
+        + calculate_days()
+        + update_status(status)
+        + get_status()
+        + calculate_total_price()
+        + confirm_booking()
+        + cancel_booking()
+        + is_confirmed()
+        + apply_discount(discount)
+        + apply_tax(rate)
+        + get_discount()
+        + update_booking(datein, dateout, rooms)
+    }
+
+    class Payment {
+        - Booking __booking
+        - string __payment_method
+        - float __amount_paid
+        - datetime __payment_date
+        - string __status
+        + get_booking()
+        + get_payment_date()
+        + get_payment_method()
+        + get_amount_paissd()
+        + make_payment()
+        + cancel_payment()
+        + refund_payment()
+        + update_status(status)
+        + get_status()
+        + update_payment_method(method)
+    }
+
+    class Invoice{
+        -__payment: Payment
+        -__invoice_date: datetime
+
+        +generate_invoice()
+        +get_invoice_details()
+    }
+
+    class Discount {
+        - __code string 
+        - __type string 
+        - __value int 
+        + get_code()
+        + get_discount_type()
+        + get_discount_value()
+        + apply_discount(price)
+    }
+
+    class Review {
+        - __room_id string 
+        - __customer Customer 
+        - __rating float 
+        - __comment string 
+        - __date datetime 
+        + get_room_id()
+        + get_customer()
+        + get_rating()
+        + get_comment()
+        + get_date()
+        + update_review(rating, comment)
+        + cancel_review()
+    }
+
+
+    class Feedback {
+        - __id string 
+        - __customer Customer 
+        - __admin Admin 
+        - __comment string 
+        - __rating float 
+        - __date datetime 
+        + get_customer()
+        + get_admin()
+        + get_rating()
+        + submit_feedback()
+        + get_feedback()
+        + cancel_feedback()
+        + update_feedback(new_comment, new_rating)
+    }
+
+    HotelSystem "1" o-- "*" Room
+    HotelSystem "1" o-- "*" Booking
+    HotelSystem "1" o-- "*" Discount
+    HotelSystem "1" o-- "*" Feedback
+    HotelSystem "1" o-- "*" User
+    HotelSystem "1" o-- "*" Review
+
+    User <|-- Customer
+    User <|-- Admin
+
+
+    Customer "1" --> "*" Booking
+    Booking "1" --> "*" Room
+    
+    Customer "1" --> "*" Review
+    
+
+    Booking "1" --> "0..1" Payment
+    Booking "1" --> "0..1" Invoice 
+    Discount "0..1" <-- "1" Booking
+
+    Payment "1" --> "1" Invoice
+
+
+    Admin "1" --> "1" HotelSystem
