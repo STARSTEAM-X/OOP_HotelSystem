@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 import axios from "axios"; // Import axios
 
 export default function Home() {
@@ -13,6 +12,7 @@ export default function Home() {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [showDateWarning, setShowDateWarning] = useState(false);
     const [roomsData, setRoomsData] = useState([]);
+    const [username, setUsername] = useState("STARSTEAM"); // Add username state
 
     // Fetch room data when startDate and endDate are available
     useEffect(() => {
@@ -41,7 +41,7 @@ export default function Home() {
 
     const time = new Date();
     time.setHours(0, 0, 0, 0);
-    const minDate = time.toLocaleDateString("sv-SE")
+    const minDate = time.toLocaleDateString("sv-SE");
 
     useEffect(() => {
         const savedRooms = JSON.parse(localStorage.getItem("selectedRooms")) || [];
@@ -54,11 +54,17 @@ export default function Home() {
         );
     }, [search, roomsData]);
 
-
-
     const toggleRoomSelection = useCallback((room) => {
         if (!startDate || !endDate) {
             setShowDateWarning(true); // เปิด Modal
+            return;
+        }
+
+        // Retrieve the username from localStorage
+        const username = localStorage.getItem("username");
+
+        if (!username) {
+            console.error("Username not found in localStorage");
             return;
         }
 
@@ -68,6 +74,23 @@ export default function Home() {
 
         setSelectedRooms(updatedSelectedRooms);
         localStorage.setItem("selectedRooms", JSON.stringify(updatedSelectedRooms));
+
+        // Send API request to select or deselect the room
+        const apiUrl = selectedRooms.some((selectedRoom) => selectedRoom.id === room.id)
+            ? "http://127.0.0.1:5000/api/user_deselect_room"
+            : "http://127.0.0.1:5000/api/user_select_room";
+
+        axios
+            .post(apiUrl, {
+                username,
+                room_id: room.id,
+            })
+            .then((response) => {
+                console.log(`Room ${selectedRooms.some((selectedRoom) => selectedRoom.id === room.id) ? "deselected" : "selected"} successfully`);
+            })
+            .catch((error) => {
+                console.error("Error updating room selection:", error);
+            });
     }, [selectedRooms, startDate, endDate]);
 
     const handleViewDetail = useCallback((room) => {
@@ -91,14 +114,32 @@ export default function Home() {
             return;
         }
 
-        // ✅ ไปที่หน้า Booking และส่งข้อมูลห้องที่เลือกไปด้วย
-        navigate("/booking", {
-            state: {
-                selectedRooms,
-                startDate,
-                endDate
-            }
-        });
+        const username = localStorage.getItem("username");
+
+        if (!username) {
+            console.error("Username not found in localStorage");
+            return;
+        }
+
+        console.log(startDate, endDate);
+
+        axios
+            .post("http://127.0.0.1:5000/api/user_make_booking", {
+                username,
+                checkin: startDate,
+                checkout: endDate
+            })
+            .then((response) => {
+                console.log(response.data);
+                alert("Booking Successful!");
+                localStorage.setItem("selectedRooms", JSON.stringify([])); // Clear selected rooms
+                setSelectedRooms([]);
+                navigate(`/booking/${response.data}`); // Redirect after booking with username in path
+            })
+            .catch((error) => {
+                console.error("Error making booking:", error);
+                alert("Failed to make booking. Please try again.");
+            });
     };
 
     return (
@@ -158,12 +199,10 @@ export default function Home() {
                     ))}
                 </div>
 
-                {/* Selected Rooms Section (แสดงเฉพาะเมื่อมีการเลือกห้อง) */}
+                {/* Selected Rooms Section */}
                 {selectedRooms.length > 0 && (
                     <div className="w-full md:w-80 bg-white p-4 rounded-lg shadow-md flex flex-col items-center self-start">
                         <h2 className="text-lg font-semibold mb-4 text-center">Selected Rooms</h2>
-
-                        {/* ให้ div ปรับขนาดตามเนื้อหา */}
                         <div className="space-y-4 overflow-y-auto w-full">
                             {selectedRooms.map((room) => (
                                 <div key={room.id} className="flex items-center border p-2 rounded-lg shadow w-full">
@@ -177,13 +216,9 @@ export default function Home() {
                                 </div>
                             ))}
                         </div>
-
-                        {/* ใช้ margin แทน <br /> */}
                         <p className="text-sm text-gray-600 text-center mt-2">
                             📅 Start: {startDate || "Not selected"} | End: {endDate || "Not selected"}
                         </p>
-
-                        {/* ปุ่ม Make Booking ติดกับ list */}
                         <button
                             onClick={handleMakeBooking}
                             className="mt-3 w-full py-2 px-4 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition"
@@ -192,7 +227,6 @@ export default function Home() {
                         </button>
                     </div>
                 )}
-
             </div>
 
             {/* 🔹 Modal แจ้งเตือน */}
@@ -207,7 +241,6 @@ export default function Home() {
                         >
                             OK
                         </button>
-
                     </div>
                 </div>
             )}

@@ -1,19 +1,40 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+
+import axios from "axios";
 
 export default function Payment() {
-    const location = useLocation();
     const navigate = useNavigate();
-
-    // Retrieve booking details from navigation state
-    const { selectedRooms, startDate, endDate, discountAmount, totalAmount } = location.state || {};
+    const { booking_id } = useParams();
 
     // State management
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [amount, setAmount] = useState(totalAmount || ""); // Default to totalAmount
+    const [selectedRooms, setSelectedRooms] = useState([]);
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [discountAmount, setDiscountAmount] = useState(0);
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [amount, setAmount] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("credit_card");
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+
+    useEffect(() => {
+        // Fetch booking payment details from server
+        axios.get(`http://127.0.0.1:5000/api/booking/payment/${booking_id}`)
+            .then((response) => {
+                const { rooms, datein, dateout, discount, final_price } = response.data
+                setSelectedRooms(rooms)
+                setStartDate(datein)
+                setEndDate(dateout)
+                setDiscountAmount(discount)
+                setTotalAmount(final_price)
+                setAmount(final_price)
+            })
+            .catch((error) => {
+                console.error("Error fetching booking payment details:", error);
+            });
+    }, [booking_id]);
 
     // If no booking found, redirect to home
     if (!selectedRooms || selectedRooms.length === 0) {
@@ -36,28 +57,32 @@ export default function Payment() {
             return;
         }
 
+
+
         setIsProcessing(true);
         setErrorMessage("");
 
-        setTimeout(() => {
-            navigate("/invoice", {
-                state: {
-                    selectedRooms,
-                    startDate,
-                    endDate,
-                    amount,
-                    paymentMethod,
-                    discountAmount,
-                    totalAmount
-                },
+        axios.get(`http://127.0.0.1:5000/api/booking/payment/${booking_id}`)
+            .then((response) => {
+                const { rooms, datein, dateout, discount, final_price } = response.data
+                setSelectedRooms(rooms)
+                setStartDate(datein)
+                setEndDate(dateout)
+                setDiscountAmount(discount)
+                setTotalAmount(final_price)
+                setAmount(final_price)
+            })
+            .catch((error) => {
+                console.error("Error fetching booking payment details:", error);
             });
+
+        setTimeout(() => {
+            navigate(`/invoice/${booking_id}`);
         }, 2000); // Simulate processing delay
     };
 
     return (
         <div className="min-h-screen p-6 flex flex-col items-center">
-
-
             <div className="mt-6 w-full max-w-3xl bg-white p-6 rounded-lg shadow">
                 <h1 className="text-2xl font-bold mb-4">💳 Payment</h1>
 
@@ -68,6 +93,7 @@ export default function Payment() {
                         <img src={room.image} alt={room.name} className="w-16 h-16 rounded-md object-cover" />
                         <div className="ml-4">
                             <h3 className="text-lg font-medium">{room.name}</h3>
+                            <p className="text-gray-600">${room.price}</p>
                         </div>
                     </div>
                 ))}

@@ -13,7 +13,6 @@ import Invoice from "./pages/Invoice";
 import ViewBooking from "./pages/ViewBooking";
 import ManageRoom from "./pages/ManageRoom";
 
-
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import PageNotFound from "./pages/PageNotFound";
@@ -28,13 +27,12 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/booking" element={<Booking />} />
-        <Route path="/payment" element={<Payment />} />
-        <Route path="/invoice" element={<Invoice />} />
+        <Route path="/booking/:booking_id" element={<Booking />} />
+        <Route path="/payment/:booking_id" element={<Payment />} />
+        <Route path="/invoice/:booking_id" element={<Invoice />} />
 
         <Route path="/viewbooking" element={<ViewBooking />} />
         <Route path="/manageroom" element={<ManageRoom />} />
-
 
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />

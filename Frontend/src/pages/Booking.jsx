@@ -1,19 +1,34 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
+import axios from "axios"; // Import axios
 
 export default function Booking() {
     const navigate = useNavigate();
-    const location = useLocation();
+    const { booking_id } = useParams();
+    const [selectedRooms, setSelectedRooms] = useState([]);
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
     const [discountCode, setDiscountCode] = useState("");
     const [discountAmount, setDiscountAmount] = useState(0);
+    const [totalAmount, setTotalAmount] = useState(0);
     const [errorMessage, setErrorMessage] = useState("");
 
-    const validDiscountCodes = {
-        "DISCOUNT10": 10, // ลด 10 USD
-        "SUMMER20": 20,   // ลด 20 USD
-    };
-    const { selectedRooms, startDate, endDate } = location.state || {};
+    useEffect(() => {
+        // Fetch booking details from server
+        axios.get(`http://127.0.0.1:5000/api/booking/${booking_id}`)
+            .then((response) => {
+                const { selected_rooms, start_date, end_date, discount_amount, total_amount } = response.data;
+                setSelectedRooms(selected_rooms);
+                setStartDate(start_date);
+                setEndDate(end_date);
+                setDiscountAmount(discount_amount);
+                setTotalAmount(total_amount);
+            })
+            .catch((error) => {
+                console.error("Error fetching booking details:", error);
+            });
+    }, [booking_id]);
 
     if (!selectedRooms || selectedRooms.length === 0) {
         return (
@@ -27,25 +42,48 @@ export default function Booking() {
     }
 
     const applyDiscount = () => {
-        if (validDiscountCodes[discountCode]) {
-            setDiscountAmount(validDiscountCodes[discountCode]);
-            setErrorMessage("");
-        } else {
-            setDiscountAmount(0);
-            setErrorMessage("❌ Invalid Discount Code");
-        }
+        axios
+            .post("http://127.0.0.1:5000/api/user_add_discount", {
+                booking_id: `${booking_id}`, // Assuming booking ID format
+                discount_code: discountCode,
+            })
+            .then((response) => {
+                console.log(booking_id);
+                console.log(response.data);
+                const discount = response.data.discount;
+                setDiscountAmount(discount);
+                setTotalAmount(response.data.final_price)
+                setErrorMessage("");
+            })
+            .catch((error) => {
+                console.error("Error applying discount:", error);
+                setDiscountAmount(0);
+                setErrorMessage("❌ Invalid Discount Code");
+            });
     };
 
-    const totalAmount = selectedRooms.reduce((sum, room) => sum + room.price, 0) - discountAmount;
-
     const handleConfirmBooking = () => {
-        navigate("/payment", { state: { selectedRooms, discountAmount, totalAmount, startDate, endDate } });
+        axios
+            .post("http://127.0.0.1:5000/api/user_confirm_booking", {
+                booking_id,
+                discount_amount: discountAmount,
+                total_amount: totalAmount,
+                start_date: startDate,
+                end_date: endDate,
+                selected_rooms: selectedRooms,
+            })
+            .then((response) => {
+                console.log(response.data);
+                navigate(`/payment/${booking_id}`);
+            })
+            .catch((error) => {
+                console.error("Error confirming booking:", error);
+                alert("Failed to confirm booking. Please try again.");
+            });
     };
 
     return (
         <div className="min-h-screen p-6  flex flex-col items-center">
-
-
             <div className="w-full max-w-3xl bg-white p-6 rounded-lg shadow">
                 <h1 className="text-2xl font-bold mb-4">Confirm Booking</h1>
                 <p className="text-lg">📅 Stay: {startDate} → {endDate}</p>

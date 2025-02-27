@@ -64,6 +64,11 @@ class Hotel:
             if booking.id == booking_id:
                 return booking
             
+    def find_booking_by_username(self, username: str):
+        for booking in self.__bookings:
+            if booking.customer.username == username:
+                return booking
+            
     def find_discount_by_code(self, discount_code: str):
         for discount in self.__discounts:
             if discount.code == discount_code:
@@ -357,7 +362,7 @@ class Booking:
 
     def apply_discount(self, discount: "Discount"):
         self.__discount = discount
-        self.__final_price -= discount.amount
+        self.__final_price = self.price - discount.calculate_discount(self.price)
 
     def confirm_booking(self):
         self.__status = "Confirmed"
@@ -631,39 +636,46 @@ def user_make_booking():
         return "User not found"
     if not datein or not dateout:
         return "Invalid date format"
-    if datein >= dateout:
+    if datein > dateout:
         return "Invalid date range"
     if not customer.get_selected_room():
         return "No room selected"
     booking = Booking(id= F'BOOK_{len(hotel_instance.get_all_bookings())+1}', customer=customer, datein=datein, dateout=dateout)
     hotel_instance.add_booking(booking)
-    return "Create Booking successful"
+    return booking.id
 
 @app.route('/api/user_add_discount', methods=['POST'])
 def user_add_discount():
     data = request.get_json()
     booking = hotel_instance.find_booking_by_id(data['booking_id'])
     discount = hotel_instance.find_discount_by_code(data['discount_code'])
+    print(data)
+    print(booking)
+    print(discount)
 
-    for x in hotel_instance.get_all_bookings():
-        print(x.id)
     if not booking:
-        return "Booking not found"
+        return "Booking not found",500
     
     if not discount:
-        return "Discount not found"
+        return "Discount not found",500
     
     booking.apply_discount(discount)
     print(booking.price)
     print(booking.final_price)
-    return "Discount applied"
+    result = {
+        "booking_id": booking.id,
+        "price": booking.price,
+        "final_price": booking.final_price,
+        "discount": discount.calculate_discount(booking.price)
+    }
+    return jsonify(result),200
 
 @app.route('/api/user_confirm_booking', methods=['POST'])
 def user_confirm_booking():
     data = request.get_json()
     booking = hotel_instance.find_booking_by_id(data['booking_id'])
     booking.confirm_booking()
-    return "Booking confirmed"
+    return booking.id
 
 @app.route('/api/pay_booking', methods=['POST'])
 def pay_booking():
@@ -696,6 +708,53 @@ def get_booking_invoice():
         "status": invoice.status
     }
     return jsonify(invoice_info)
+
+# New route to get booking details by username
+
+@app.route('/api/booking/<booking_id>', methods=['GET'])
+def get_booking_by_username(booking_id):
+    booking = hotel_instance.find_booking_by_id(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+    booking_info = {
+        "selected_rooms": [{"id": room.id, "name": room.room_type, "price": room.price, "description": room.description, "details": room.details, "image": room.image} for room in booking.rooms],
+        "start_date": booking.datein.strftime('%Y-%m-%d'),
+        "end_date": booking.dateout.strftime('%Y-%m-%d'),
+        "discount_amount": booking.discount.amount if booking.discount else 0,
+        "total_amount": booking.final_price
+    }
+    return jsonify(booking_info)
+
+# New route to get booking payment details
+@app.route('/api/booking/payment/<booking_id>', methods=['GET'])
+def get_booking_payment_by_booking_id(booking_id):
+    booking = hotel_instance.find_booking_by_id(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+    
+    if booking.discount:
+        discount = booking.discount.calculate_discount(booking.price)
+    else:
+        discount = 0
+
+    rooms_info = [{"id": room.id, "name": room.room_type, "price": room.price,"description": room.description,"details": room.details,"image": room.image} for room in booking.rooms]
+    payment_info = {
+        "rooms": rooms_info,
+        "datein": booking.datein.strftime('%Y-%m-%d'),
+        "dateout": booking.dateout.strftime('%Y-%m-%d'),
+        "discount" : discount,
+        "final_price":booking.final_price
+    }
+    return jsonify(payment_info)
+
+@app.route('/api/booking/invoice/<booking_id>', methods=['GET'])
+def get_booking_invoice_by_booking_id(booking_id):
+    booking = hotel_instance.find_booking_by_id(booking_id)
+    if not booking:
+        return jsonify({"error": "Booking not found"}), 404
+    
+
+    return ""
 
 if __name__ == '__main__':
     app.run(debug=True)
