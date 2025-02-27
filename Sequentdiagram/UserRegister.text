@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant UI
+    participant HotelSystem
+    participant Customer
+
+    UI ->> HotelSystem: register(username, password, email, firstname, lastname)
+    HotelSystem ->> HotelSystem: Check if username is available
+    alt Username available
+        HotelSystem ->> Customer: Create new Customer
+        Customer -->> HotelSystem: Customer created
+        HotelSystem ->> HotelSystem: Store Customer data
+        HotelSystem ->> UI: Success response
+        UI ->> UI: Redirect to Login Page
+    else Username not available
+        HotelSystem ->> UI: User '{username}' already exists.
+        UI ->> UI: Display Error Message
+    end

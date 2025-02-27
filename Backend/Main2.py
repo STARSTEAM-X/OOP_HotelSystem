@@ -546,6 +546,12 @@ class HotelSystem:
             if user.get_id() == id:
                 return user
         return f"No user found with ID '{id}'"
+    
+    def find_user_by_username(self, username: str):
+        for user in self.__users:
+            if user.get_username() == username:
+                return user
+        return False
 
     def find_booking_by_id(self, id: str):
         for booking in self.__bookings:
@@ -583,6 +589,15 @@ class HotelSystem:
             if user.login(username, password):
                 return f"User '{username}' authenticated successfully."
         return f"Authentication failed for user '{username}'."
+    
+    def register(self, username: str, password: str, email: str,firstname:str, surname:str) -> str:
+        result = self.find_user_by_username(username)
+        if not result:
+            new_customer = Customer(str(len(self.__users) + 1), firstname, surname, username, password, email)
+            self.__users.append(new_customer)
+            return f"User '{username}' registered successfully."
+        else:
+            return f"User '{username}' already exists."
 
 
 
