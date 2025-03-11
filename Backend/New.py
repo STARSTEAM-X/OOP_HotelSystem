@@ -74,8 +74,9 @@ class Customer(User):
             return False #"Room is not selected"
 
 class Admin(User):
-    def __init__(self, name, email, phone_number, account):
+    def __init__(self, name, email, phone_number, account, position):
         super().__init__(name, email, phone_number, account)
+        self.__position = position
 
 class Room:
     def __init__(self, id, type, price, capacity, image, description, details):
@@ -150,9 +151,8 @@ class Booking:
         self.__customer = customer
         self.__check_in =  datetime.strptime(check_in, "%Y-%m-%d").strftime("%Y-%m-%d")
         self.__check_out = datetime.strptime(check_out, "%Y-%m-%d").strftime("%Y-%m-%d")
-        self.__num_days = (datetime.strptime(check_out, "%Y-%m-%d") - datetime.strptime(check_in, "%Y-%m-%d")).days
         self.__room = customer.selected_room
-        self.__price = sum([room.price for room in self.__room])*self.__num_days
+        self.__price = sum([room.price for room in self.__room])*self.num_days()
         self.__final_price = self.__price
         self.__status = 0 # 0: Pending, 1: Confirmed, 2: Cancelled
         self.__discount = None
@@ -162,6 +162,9 @@ class Booking:
     @property
     def id(self):
         return self.__id
+    
+    def num_days(self):
+        return (datetime.strptime(self.__check_out, "%Y-%m-%d") - datetime.strptime(self.__check_in, "%Y-%m-%d")).days
     
     @property
     def check_in(self):
@@ -307,20 +310,19 @@ class Payment:
 
 class Invoice:
     def __init__(self, booking):
-        print(booking.final_price)
-        self.__invoice_id = f"INV-{booking.id}"
+        self.__id = f"INV-{booking.id}"
         self.__booking = booking
-        self.__date_issued = datetime.now()
+        self.__date = datetime.now()
         self.__amount = booking.final_price
-        self.__status = "Unpaid"
+        self.__status = 0  # 0: Unpaid, 1: Paid, 2: Cancelled
 
     def get_invoice_details(self):
         self.update_status()
         
         return {
-            "Invoice ID": self.__invoice_id,
+            "Invoice ID": self.__id,
             "Booking ID": self.__booking.id,
-            "Date Issued": self.__date_issued,
+            "Date Issued": self.__date,
             "Total Amount": self.__amount,
             "Payment Status": self.__status,
             "Room Details": [
@@ -335,10 +337,12 @@ class Invoice:
         }
     
     def update_status(self):
-        if self.__booking.payment.status == 1:
+        if self.__booking.payment.status == 0:
+            self.__status = "Unpaid"
+        elif self.__booking.payment.status == 1:
             self.__status = "Paid"
         else:
-            self.__status = "Unpaid"
+            self.__status = "Cancelled"
 
 class Feedback:
     def __init__(self, customer, message, rating):
@@ -541,7 +545,7 @@ class Hotel:
 
 def create_instance():
     hotel = Hotel("AAA Hotel", "123 Street", "097-xxx-xxxx","AAAHotel@gmail.com")
-    admin1 = Admin("Admin1", "Admin1@gmail.com", "097-xxx-xxxx", Account("admin1", "1234", "admin"))
+    admin1 = Admin("Admin1", "Admin1@gmail.com", "097-xxx-xxxx", Account("admin1", "1234", "admin"), "Manager")
     customer1 = Customer("Customer1", "Customer1@gmail.com", "097-xxx-xxxx", Account("customer1", "1234", "customer"))
     customer2 = Customer("Customer2", "Customer2@gmail.com", "097-xxx-xxxx", Account("customer2", "1234", "customer"))
 
