@@ -293,6 +293,14 @@ class Discount:
     def value(self):
         return self.__value
     
+    @code.setter
+    def code(self, code):
+        self.__code = code
+
+    @value.setter
+    def value(self, value):
+        self.__value = value
+    
 
 class Payment:
     def __init__(self, booking, amount):
@@ -363,19 +371,24 @@ class Invoice:
         self.__status = status
 
 class Feedback:
-    def __init__(self, customer, message, rating):
+    def __init__(self, id, customer, comment, rating):
+        self.__id = id
         self.__customer = customer
-        self.__message = message
+        self.__comment = comment
         self.__rating = rating
         self.__date = datetime.now()
 
+    @property
+    def id(self):
+        return self.__id
+    
     @property
     def customer(self):
         return self.__customer
     
     @property
-    def message(self):
-        return self.__message
+    def comment(self):
+        return self.__comment
     
     @property
     def rating(self):
@@ -386,11 +399,17 @@ class Feedback:
         return self.__date
 
 class Review:
-    def __init__(self, room_id,customer, message):
+    def __init__(self, id, room_id, customer, rating, comment):
+        self.__id = id
         self.__room_id = room_id
         self.__customer = customer
-        self.__message = message
+        self.__rating = rating
+        self.__comment = comment
         self.__date = datetime.now()
+
+    @property
+    def id(self):
+        return self.__id
 
     @property
     def room_id(self):
@@ -401,8 +420,12 @@ class Review:
         return self.__customer
     
     @property
-    def message(self):
-        return self.__message
+    def rating(self):
+        return self.__rating
+    
+    @property
+    def comment(self):
+        return self.__comment
     
     @property
     def date(self):
@@ -449,6 +472,9 @@ class Hotel:
                 return False #"Booking already exists"
 
     def add_discount(self, discount: Discount):
+        for d in self.__discounts:
+            if d.code == discount.code:
+                return False
         if discount not in self.__discounts:
             self.__discounts.append(discount)
             return f'Discount {discount.code} has been added'
@@ -468,6 +494,48 @@ class Hotel:
             return f'Review from {review.customer.name} has been added'
         else:
             return False #"Review already exists"
+        
+    def delete_room(self, room):
+        if room in self.__rooms:
+            self.__rooms.remove(room)
+            return f"Room {room.id} has been removed"
+        else:
+            return False
+        
+    def delete_user(self, user):
+        if user in self.__users:
+            self.__users.remove(user)
+            return f"User {user.account.username} has been removed"
+        else:
+            return False
+        
+    def delete_booking(self, booking):
+        if booking in self.__bookings:
+            self.__bookings.remove(booking)
+            return f"Booking {booking.id} has been removed"
+        else:
+            return False
+        
+    def delete_discount(self, discount):
+        if discount in self.__discounts:
+            self.__discounts.remove(discount)
+            return f"Discount {discount.code} has been removed"
+        else:
+            return False
+        
+    def delete_feedback(self, feedback):
+        if feedback in self.__feedbacks:
+            self.__feedbacks.remove(feedback)
+            return f"Feedback from {feedback.customer.name} has been removed"
+        else:
+            return False
+        
+    def delete_review(self, review):
+        if review in self.__reviews:
+            self.__reviews.remove(review)
+            return f"Review from {review.customer.name} has been removed"
+        else:
+            return False
 
     def get_all_users(self):
         return self.__users
@@ -514,6 +582,20 @@ class Hotel:
                 return discount
         else:
             return False #"Discount not found"
+        
+    def get_feedback_by_id(self, id):
+        for feedback in self.__feedbacks:
+            if feedback.id == id:
+                return feedback
+        else:
+            return False
+        
+    def get_review_by_id(self, id):
+        for review in self.__reviews:
+            if review.id == id:
+                return review
+        else:
+            return False
             
     def get_feedback_by_customer(self, customer):
         feedbacks = []
@@ -521,6 +603,13 @@ class Hotel:
             if feedback.customer == customer:
                 feedbacks.append(feedback)
         return feedbacks
+    
+    def get_review_by_customer(self, customer):
+        reviews = []
+        for review in self.__reviews:
+            if review.customer == customer:
+                reviews.append(review)
+        return reviews
     
     def get_review_by_room_id(self, room_id):
         reviews = []
@@ -562,6 +651,26 @@ class Hotel:
 
     def generate_booking_id(self):
         lst = [int(booking.id[5:]) for booking in self.__bookings]
+        if not lst:
+            return "01"
+        id = max(lst)+1
+        str_id = str(id)
+        if len(str_id) == 1:
+            return "0"+str_id
+        return id
+    
+    def generate_feedback_id(self):
+        lst = [int(feedback.id[5:]) for feedback in self.__feedbacks]
+        if not lst:
+            return "01"
+        id = max(lst)+1
+        str_id = str(id)
+        if len(str_id) == 1:
+            return "0"+str_id
+        return id
+    
+    def generate_review_id(self):
+        lst = [int(review.id[5:]) for review in self.__reviews]
         if not lst:
             return "01"
         id = max(lst)+1
