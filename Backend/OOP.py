@@ -57,18 +57,22 @@ class User:
 class Customer(User):
     def __init__(self, name, email, phone_number, account):
         super().__init__(name, email, phone_number, account)
-        self.selected_room = []
+        self.__selected_room = []
+
+    @property
+    def selected_room(self):
+        return self.__selected_room
 
     def select_room(self, room, hotel,check_in, check_out):
-        if hotel.check_availability(check_in, check_out, room):
-            self.selected_room.append(room)
+        if hotel.check_availability(check_in, check_out, room) and room not in self.__selected_room:
+            self.__selected_room.append(room)
             return f"Room {room.id} has been selected"
         else:
             return False #"Room is not available"
 
     def delete_room(self, room):
-        if room in self.selected_room:
-            self.selected_room.remove(room)
+        if room in self.__selected_room:
+            self.__selected_room.remove(room)
             return f"Room {room.id} has been removed"
         else:
             return False #"Room is not selected"
@@ -146,7 +150,6 @@ class Room:
 
 class Booking:
     def __init__(self, id, check_in, check_out, customer):
-        
         self.__id = id
         self.__customer = customer
         self.__check_in =  datetime.strptime(check_in, "%Y-%m-%d").strftime("%Y-%m-%d")
@@ -249,7 +252,6 @@ class Booking:
         # ถ้าผ่านการตรวจสอบแล้ว ให้ทำการยืนยัน
         self.__payment = Payment(self, self.__final_price)
         self.__invoice = Invoice(self)
-        self.__status = 1  # เปลี่ยนสถานะเป็น Confirmed
         return f"Booking {self.__id} has been confirmed"
 
 
@@ -259,13 +261,14 @@ class Booking:
             self.__payment.status = 2
         if self.__invoice:
             self.__invoice.status = 2
+        return f"Booking {self.__id} has been cancelled"
 
     def make_payment(self, method):
-        if self.__status != 1:
-            return False #"Booking must be confirmed before payment"
-        if self.__payment is None:
-            self.__payment = Payment(self, self.__final_price)
-        return self.__payment.make_payment(method)
+        if self.__status == 0:
+            self.__status = 1
+            return self.__payment.make_payment(method)
+        else:
+            return False
     
     def get_invoice(self):
         if not hasattr(self, '__invoice'):
@@ -307,10 +310,14 @@ class Payment:
     @property
     def status(self):
         return self.__status
+    
+    @status.setter
+    def status(self, status):
+        self.__status = status
 
 class Invoice:
     def __init__(self, booking):
-        self.__id = f"INV-{booking.id}"
+        self.__id = f"INV-{booking.id[5:]}"
         self.__booking = booking
         self.__date = datetime.now()
         self.__amount = booking.final_price
@@ -318,7 +325,6 @@ class Invoice:
 
     def get_invoice_details(self):
         self.update_status()
-        
         return {
             "Invoice ID": self.__id,
             "Booking ID": self.__booking.id,
@@ -343,6 +349,14 @@ class Invoice:
             self.__status = "Paid"
         else:
             self.__status = "Cancelled"
+
+    @property
+    def status(self):
+        return self.__status
+    
+    @status.setter
+    def status(self, status):
+        self.__status = status
 
 class Feedback:
     def __init__(self, customer, message, rating):
@@ -534,7 +548,23 @@ class Hotel:
                     elif(check_out > booked_in and check_out <= booked_out):
                         return False  # ห้องถูกจองแล้ว
         return True  # ห้องว่าง
+    
+    def get_available_rooms(self, check_in, check_out):
+        available_rooms = []
+        for room in self.__rooms:
+            if self.check_availability(check_in, check_out, room):  # Pass check_in, check_out as strings
+                available_rooms.append(room)
+        return available_rooms
 
+    def generate_booking_id(self):
+        lst = [int(booking.id[5:]) for booking in self.__bookings]
+        if not lst:
+            return "01"
+        id = max(lst)+1
+        str_id = str(id)
+        if len(str_id) == 1:
+            return "0"+str_id
+        return id
     
     def authenticate(self, username, password):
         for user in self.__users:
@@ -578,7 +608,7 @@ def create_instance():
     print(customer1.select_room(room1, hotel, "2025-03-11", "2025-03-13"))
     print(customer1.select_room(room2, hotel, "2025-03-11", "2025-03-13"))
 
-    booking1 = Booking("BOOK-01", "2025-03-11", "2025-03-13", customer1)
+    booking1 = Booking("BOOK-1", "2025-03-11", "2025-03-13", customer1)
     print(hotel.add_booking(booking1))
     print(booking1.apply_discount(discount1))
     print(booking1.confirm_booking(hotel))
@@ -592,7 +622,7 @@ def create_instance():
     print("\n\n Customer2 Select Room")
     print(customer2.select_room(room1, hotel, "2025-03-14", "2025-03-15"))
 
-    booking2 = Booking("BOOK-02", "2025-03-14", "2025-03-15", customer2)
+    booking2 = Booking("BOOK-2", "2025-03-14", "2025-03-15", customer2)
     print(hotel.add_booking(booking2))
     print(booking2.apply_discount(discount2))
     print(booking2.confirm_booking(hotel))
@@ -602,6 +632,8 @@ def create_instance():
     print(hotel.add_feedback(feedback2))
     review2 = Review("101", customer2, "Good")
     print(hotel.add_review(review2))
+
+
 
 
 if __name__ == "__main__":
