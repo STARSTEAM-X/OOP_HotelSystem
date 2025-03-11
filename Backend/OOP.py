@@ -228,6 +228,10 @@ class Booking:
     @property
     def payment(self):
         return self.__payment
+    
+    @property
+    def invoice(self):
+        return self.__invoice
 
     @status.setter
     def status(self, status):

@@ -302,6 +302,34 @@ def get_booking_payment_by_booking_id(booking_id):
             return jsonify({"error": "Payment not found"}), 404
     else:
         return jsonify({"error": "Booking not found"}), 404
+    
+@app.route('/api/booking/invoice/<booking_id>', methods=['GET'])
+def get_booking_invoice_by_booking_id(booking_id):
+    booking = hotel.get_booking_by_id(booking_id)
+    if booking:
+        invoice = booking.invoice
+        print(invoice)
+        if invoice:
+            return jsonify({
+                "check_in": booking.check_in,
+                "check_out": booking.check_out,
+                "price": booking.price,
+                "final_price": booking.final_price,
+                "discount": booking.price - booking.final_price,
+                "room": [{
+                    "id": room.id,
+                    "type": room.type,
+                    "price": room.price,
+                    "capacity": room.capacity,
+                    "image": room.image,
+                    "description": room.description,
+                    "details": room.details
+                } for room in booking.room],
+            }), 200
+        else:
+            return jsonify({"error": "Invoice not found"}), 404
+    else:
+        return jsonify({"error": "Booking not found"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
