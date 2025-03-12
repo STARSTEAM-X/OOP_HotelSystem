@@ -201,7 +201,7 @@ export default function MyBooking() {
                             <div key={room.id} className="flex items-center border-b py-4 last:border-b-0">
                                 <img src={room.image} alt={room.type} className="w-20 h-20 rounded-md object-cover" />
                                 <div className="ml-6">
-                                    <h3 className="text-lg font-semibold text-gray-800">{room.type}</h3>
+                                    <h3 className="text-lg font-semibold text-gray-800">{room.id + " " + room.type}</h3>
                                     <p className="text-gray-700">Price per night: ${room.price}</p>
                                     {booking.status === 1 && (
                                         <button

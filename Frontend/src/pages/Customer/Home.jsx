@@ -94,11 +94,11 @@ export default function Home() {
         return (roomsData || []).filter((room) => {
             switch (searchCriterion) {
                 case "id":
-                    return room.id.toString().includes(lowerCaseSearch);
+                    return room.id?.toString().includes(lowerCaseSearch);
                 case "type":
                     return room.type?.toLowerCase().includes(lowerCaseSearch);
-                case "description":
-                    return room.description?.toLowerCase().includes(lowerCaseSearch);
+                case "capacity":
+                    return room.capacity?.toString().includes(lowerCaseSearch);
                 default:
                     return true;
             }
@@ -241,7 +241,7 @@ export default function Home() {
                         >
                             <option value="id">ID</option>
                             <option value="type">Type</option>
-                            <option value="description">Description</option>
+                            <option value="capacity">Capacity</option>
                         </select>
                         <input
                             type="text"
