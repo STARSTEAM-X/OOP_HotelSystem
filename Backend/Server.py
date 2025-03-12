@@ -818,7 +818,7 @@ def feedback_delete():
         return jsonify({"error": "Invalid username or role"}), 400
     
 
-@app.route('/api/admin/review/view', methods=['Post'])
+@app.route('/api/admin/review/view', methods=['Post']) 
 def review_view():
     username = request.json['username']
     user = hotel.get_user_by_username(username)
@@ -848,6 +848,7 @@ def review_delete():
     if user and user.account.role == "admin":
         review_id = request.json['review_id']
         review = hotel.get_review_by_id(review_id)
+        print(review)
         if review:
             response = hotel.delete_review(review)
             if response:

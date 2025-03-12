@@ -18,7 +18,7 @@ export default function ManageReview() {
     const fetchReviews = async () => {
         try {
             const { data } = await axios.post("http://127.0.0.1:5000/api/admin/review/view", {
-                username: localStorage.getItem("username")
+                username: localStorage.getItem("username"),
             });
             if (data.error) {
                 setErrorMessage(data.error);
