@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // Import axios
+import { FaStar } from "react-icons/fa";
 
 export default function Home() {
     const [search, setSearch] = useState("");
@@ -14,7 +15,8 @@ export default function Home() {
     const [roomsData, setRoomsData] = useState([]);
     const [username, setUsername] = useState("");
     const [isCollapsed, setIsCollapsed] = useState(false); // Add state for collapse
-    const [searchCriterion, setSearchCriterion] = useState("type"); // New state for search criterion
+    const [searchCriterion, setSearchCriterion] = useState("id"); // New state for search criterion
+    const [reviews, setReviews] = useState([]); // State to store reviews
 
     // Fetch room data when startDate and endDate are available
     useEffect(() => {
@@ -62,6 +64,18 @@ export default function Home() {
 
         fetchSelectedRooms();
     }, [username]); // Fetch new data when username changes
+
+    const fetchReviews = useCallback(async (roomId) => {
+        try {
+            const response = await axios.post("http://127.0.0.1:5000/api/get_review_by_room_id", {
+                username: localStorage.getItem("username"),
+                room_id: roomId,
+            });
+            setReviews(response.data);
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+        }
+    }, []);
 
     const navigate = useNavigate();
 
@@ -133,7 +147,8 @@ export default function Home() {
 
     const handleViewDetail = useCallback((room) => {
         setRoomDetails(room);
-    }, []);
+        fetchReviews(room.id); // Fetch reviews when viewing details
+    }, [fetchReviews]);
 
     const handleCloseDetail = useCallback(() => {
         setRoomDetails(null);
@@ -176,6 +191,12 @@ export default function Home() {
                 console.error("Error making booking:", error);
                 alert("Failed to make booking. Please try again.");
             });
+    };
+
+    const renderStars = (rating) => {
+        return Array.from({ length: 5 }, (_, index) => (
+            <FaStar key={index} color={index < rating ? "#ffc107" : "#e4e5e9"} />
+        ));
     };
 
     return (
@@ -237,25 +258,43 @@ export default function Home() {
                 {/* Modal */}
                 {roomDetails && (
                     <div className="fixed inset-0 bg-black/80 p-4 flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-96 max-w-full shadow-lg relative">
-                            <h3 className="text-xl font-semibold">{roomDetails.id + " : " + roomDetails.type} - Details</h3>
-                            <p className="mt-2">{roomDetails.details}</p>
-                            <p className="mt-2">Capacity: {roomDetails.capacity}</p>
-                            <p className="mt-2">Price: {roomDetails.price}</p>
-                            <img src={roomDetails.image} alt={roomDetails.type} className="w-full h-60 mt-4 object-cover rounded-lg" />
-                            <div className="mt-4 flex justify-between">
-                                <button onClick={handleCloseDetail} className="py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
-                                    Close
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        toggleRoomSelection(roomDetails);
-                                        handleCloseDetail();
-                                    }}
-                                    className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                                >
-                                    {selectedRooms.some((r) => r.id === roomDetails.id) ? "Deselect" : "Select"}
-                                </button>
+                        <div className="bg-white p-6 rounded-lg w-full max-w-2xl shadow-lg relative flex flex-col md:flex-row">
+                            <div className="md:w-1/2 pr-0 md:pr-4">
+                                <h3 className="text-xl font-semibold">{roomDetails.id + " : " + roomDetails.type} - Details</h3>
+                                <p className="mt-2">{roomDetails.details}</p>
+                                <p className="mt-2">Capacity: {roomDetails.capacity}</p>
+                                <p className="mt-2">Price: {roomDetails.price}</p>
+                                <img src={roomDetails.image} alt={roomDetails.type} className="w-full h-60 mt-4 object-cover rounded-lg" />
+                                <div className="mt-4 flex justify-between">
+                                    <button onClick={handleCloseDetail} className="py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
+                                        Close
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            toggleRoomSelection(roomDetails);
+                                            handleCloseDetail();
+                                        }}
+                                        className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                                    >
+                                        {selectedRooms.some((r) => r.id === roomDetails.id) ? "Deselect" : "Select"}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="md:w-1/2 pl-0 md:pl-4 mt-4 md:mt-0 md:border-l">
+                                <h3 className="text-xl font-semibold">Reviews</h3>
+                                <div className="mt-4 space-y-4 overflow-y-auto max-h-96 pr-4">
+                                    {reviews.length ? reviews.map((review) => (
+                                        <div key={review.id} className="border rounded-md p-4">
+                                            <h4 className="font-bold">{review.customer}</h4>
+                                            <p><time dateTime={review.date}>{new Date(review.date).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric', calendar: 'gregory' })}</time></p>
+                                            <div className="flex items-center">
+                                                <p className="text-gray-600 mr-2">Rating:</p>
+                                                <div className="flex">{renderStars(review.rating)}</div>
+                                            </div>
+                                            <p className="mt-2">{review.comment}</p>
+                                        </div>
+                                    )) : <p>No reviews yet.</p>}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -365,6 +404,8 @@ export default function Home() {
                         </div>
                     </div>
                 )}
+
+
             </div>
         </div>
     );

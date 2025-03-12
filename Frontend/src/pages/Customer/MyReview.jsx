@@ -115,7 +115,7 @@ export default function MyReview() {
             </div>
 
             {editModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70">
+                <div className="fixed inset-0 flex items-center justify-center bg-black/70">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">Edit Review</h2>
                         <label className="block mb-2 text-gray-700">Rating</label>
