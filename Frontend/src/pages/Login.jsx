@@ -10,8 +10,11 @@ export default function Login() {
 
     useEffect(() => {
         const username = localStorage.getItem("username");
-        if (username) {
+        const role = localStorage.getItem("role");
+        if (username && role === "customer") {
             navigate("/home");
+        } else if (username && role === "admin") {
+            navigate("/admin/room");
         }
     }, [navigate]);
 
@@ -25,18 +28,26 @@ export default function Login() {
 
         try {
             const response = await axios.post("http://127.0.0.1:5000/api/login", formData);
-
-            if (response.status === 200) {
-                console.log(response.data);
-                localStorage.setItem("username", formData.username);
-                window.dispatchEvent(new Event("storage"));
-                navigate("/home");
+            console.log(response.data);
+            localStorage.setItem("username", response.data.username);
+            localStorage.setItem("role", response.data.role);
+            window.dispatchEvent(new Event("storage"));
+            if (response.data.role === "admin") {
+                navigate("/manageroom");
             } else {
-                setError("Login failed. Please check your credentials.");
+                navigate("/home");
             }
         } catch (error) {
-            console.error("Login Error:", error.response?.data || error.message);
-            setError(error.response?.data?.message || "Something went wrong. Please try again.");
+            if (error.response) {
+                setError("Login failed. Please check your credentials.");
+                console.log(error.response.data.message);
+            } else if (error.request) {
+                setError("Network error. Please try again.");
+                console.log(error.request);
+            } else {
+                setError("Something went wrong. Please try again.");
+                console.log("Error", error.message);
+            }
         } finally {
             setLoading(false);
         }

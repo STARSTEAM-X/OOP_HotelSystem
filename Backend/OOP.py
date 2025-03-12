@@ -18,6 +18,10 @@ class Account:
         if self.__username == username and self.__password == password:
             return True
         return False
+    
+    def change_password(self, new_password):
+        self.__password = new_password
+        return True
 
 class User:
     def __init__(self, name, email, phone, account):
@@ -62,6 +66,9 @@ class Customer(User):
     @property
     def selected_room(self):
         return self.__selected_room
+    
+    def clear_selected_room(self):
+        self.__selected_room = []
 
     def select_room(self, room, hotel,check_in, check_out):
         if hotel.check_availability(check_in, check_out, room) and room not in self.__selected_room:
@@ -155,6 +162,7 @@ class Booking:
         self.__check_in =  datetime.strptime(check_in, "%Y-%m-%d").strftime("%Y-%m-%d")
         self.__check_out = datetime.strptime(check_out, "%Y-%m-%d").strftime("%Y-%m-%d")
         self.__room = customer.selected_room
+        customer.clear_selected_room()
         self.__price = sum([room.price for room in self.__room])*self.num_days()
         self.__final_price = self.__price
         self.__status = 0 # 0: Pending, 1: Confirmed, 2: Cancelled
@@ -245,6 +253,7 @@ class Booking:
             self.__final_price = self.__price - (self.__price * discount.value / 100)
             return f"Discount {discount.code} has been applied"
         else:
+            self.__final_price = self.__price
             return False #"Invalid discount"
 
     def confirm_booking(self, hotel):
@@ -318,6 +327,10 @@ class Payment:
         self.__method = method
         self.__status = 1  # เปลี่ยนสถานะเป็น Paid
         return f"Payment for booking {self.__booking.id} completed via {method}"
+    
+    @property
+    def method(self):
+        return self.__method
 
     @property
     def status(self):
@@ -333,42 +346,9 @@ class Invoice:
         self.__booking = booking
         self.__date = datetime.now()
         self.__amount = booking.final_price
-        self.__status = 0  # 0: Unpaid, 1: Paid, 2: Cancelled
 
     def get_invoice_details(self):
-        self.update_status()
-        return {
-            "Invoice ID": self.__id,
-            "Booking ID": self.__booking.id,
-            "Date Issued": self.__date,
-            "Total Amount": self.__amount,
-            "Payment Status": self.__status,
-            "Room Details": [
-                {
-                    "Room ID": room.id,
-                    "Room Type": room.type,
-                    "Price per Night": room.price,
-                    "Capacity": room.capacity,
-                }
-                for room in self.__booking.room
-            ]
-        }
-    
-    def update_status(self):
-        if self.__booking.payment.status == 0:
-            self.__status = "Unpaid"
-        elif self.__booking.payment.status == 1:
-            self.__status = "Paid"
-        else:
-            self.__status = "Cancelled"
-
-    @property
-    def status(self):
-        return self.__status
-    
-    @status.setter
-    def status(self, status):
-        self.__status = status
+        return f"Booking ID: {self.__booking.id}\nInvoice ID: {self.__id}\nAmount: {self.__amount}"
 
 class Feedback:
     def __init__(self, id, customer, comment, rating):
@@ -394,12 +374,20 @@ class Feedback:
     def rating(self):
         return self.__rating
     
+    @rating.setter
+    def rating(self, rating):
+        self.__rating = rating
+
+    @comment.setter
+    def comment(self, comment):
+        self.__comment = comment
+    
     @property
     def date(self):
         return self.__date
 
 class Review:
-    def __init__(self, id, room_id, customer, rating, comment):
+    def __init__(self, id, room_id, customer, comment, rating):
         self.__id = id
         self.__room_id = room_id
         self.__customer = customer
@@ -427,9 +415,18 @@ class Review:
     def comment(self):
         return self.__comment
     
+    @rating.setter
+    def rating(self, rating):
+        self.__rating = rating
+
+    @comment.setter
+    def comment(self, comment):
+        self.__comment = comment
+    
     @property
     def date(self):
         return self.__date
+    
     
 class Hotel:
     def __init__(self, name: str, address: str, phone: str, email: str):
@@ -670,7 +667,7 @@ class Hotel:
         return id
     
     def generate_review_id(self):
-        lst = [int(review.id[5:]) for review in self.__reviews]
+        lst = [int(review.id[4:]) for review in self.__reviews]
         if not lst:
             return "01"
         id = max(lst)+1
@@ -727,9 +724,9 @@ def create_instance():
     print(booking1.confirm_booking(hotel))
     print(booking1.make_payment("Credit Card"))
     print(booking1.get_invoice())
-    feedback1 = Feedback(customer1, "Good", 5)
+    feedback1 = Feedback(id = f"FEED-{hotel.generate_feedback_id()}",customer= customer1, comment="Good",rating= 5)
     print(hotel.add_feedback(feedback1))
-    review1 = Review("101", customer1, "Good")
+    review1 = Review(id=f"REV-{hotel.generate_review_id()}",room_id= "101",customer= customer1, comment="Good",rating= 5)
     print(hotel.add_review(review1))
 
     print("\n\n Customer2 Select Room")
@@ -741,12 +738,10 @@ def create_instance():
     print(booking2.confirm_booking(hotel))
     print(booking2.make_payment("Bank Transfer"))
     print(booking2.get_invoice())
-    feedback2 = Feedback(customer2, "Good", 5)
+    feedback2 = Feedback(id = f"FEED-{hotel.generate_feedback_id()}",customer= customer2, comment="Good",rating= 5)
     print(hotel.add_feedback(feedback2))
-    review2 = Review("101", customer2, "Good")
+    review2 = Review(id=f"REV-{hotel.generate_review_id()}",room_id= "101",customer= customer2, comment="Good",rating= 5)
     print(hotel.add_review(review2))
-
-
 
 
 if __name__ == "__main__":

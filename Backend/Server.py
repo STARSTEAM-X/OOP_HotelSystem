@@ -18,15 +18,23 @@ print("\n\n Add User")
 print(hotel.add_user(admin1))
 print(hotel.add_user(customer1))
 print(hotel.add_user(customer2))
-
-room1 = Room("101", "Standard", 3000, 2, "image1.jpg", "Description 1", "Details 1")
-room2 = Room("102", "Suite Room", 3000, 3, "image1.jpg", "Description 1", "Details 1")
-room3 = Room("201", "Deluxe", 5000, 2, "image2.jpg", "Description 2", "Details 2")
+image = "https://www.banidea.com/wp-content/uploads/2019/09/small-hotel.jpg"
+room1 = Room("101", "Standard", 3000, 2, image, "Comfortable and affordable room with all basic amenities.", "This room offers a cozy bed, a desk for work, and a flat-screen TV.")
+room2 = Room("102", "Suite Room", 3000, 3, image, "A spacious suite with a living area and premium facilities.", "Includes a spacious living area, minibar, and a private balcony with sea views.")
+room3 = Room("201", "Deluxe", 5000, 2, image, "A luxurious room with a beautiful view and modern amenities.", "This room offers a king-size bed, a seating area, and a luxurious bathroom.")
+room4 = Room("202", "Family Room", 5000, 4, image, "A large family room with multiple beds and entertainment options.", "Includes two queen-size beds, a sofa bed, and a gaming console.")
+room5 = Room("301", "Standard", 3000, 2, image, "Comfortable and affordable room with all basic amenities.", "This room offers a cozy bed, a desk for work, and a flat-screen TV.")
+room6 = Room("302", "Suite Room", 3000, 3, image, "A spacious suite with a living area and premium facilities.", "Includes a spacious living area, minibar, and a private balcony with sea views.")
+room7 = Room("401", "Deluxe", 5000, 2, image, "A luxurious room with a beautiful view and modern amenities.", "This room offers a king-size bed, a seating area, and a luxurious bathroom.")
+room8 = Room("402", "Family Room", 5000, 4, image, "A large family room with multiple beds and entertainment options.", "Includes two queen-size beds, a sofa bed, and a gaming console.")
+room9 = Room("501", "Standard", 3000, 2, image, "Comfortable and affordable room with all basic amenities.", "This room offers a cozy bed, a desk for work, and a flat-screen TV.")
+room10 = Room("502", "Suite Room", 3000, 3, image, "A spacious suite with a living area and premium facilities.", "Includes a spacious living area, minibar, and a private balcony with sea views.")
 
 print("\n\n Add Room")
-print(hotel.add_room(room1))
-print(hotel.add_room(room2))
-print(hotel.add_room(room3))
+room_lst = [room1,room2,room3,room4, room5, room6, room7, room8, room9, room10]
+for room in room_lst:
+    print(hotel.add_room(room))
+
 
 discount1 = Discount("DISCOUNT1", 10)
 discount2 = Discount("DISCOUNT2", 20)
@@ -58,6 +66,7 @@ def login():
 
 @app.route('/api/register', methods=['POST'])
 def register():
+    print("Raw request data:", request.data)  # Debugging
     name = request.json['name']
     email = request.json['email']
     phone = request.json['phone']
@@ -70,14 +79,11 @@ def register():
         return jsonify({"message": "Registration successful"}), 201
     else:
         return jsonify({"error": "Registration failed"}), 400
-    
+
 @app.route('/api/rooms_available', methods=['POST'])
 def rooms_available():
     check_in = request.json['check_in']
     check_out = request.json['check_out']
-
-    print(f"check_in: {check_in}, Type: {type(check_in)}")
-    print(f"check_out: {check_out}, Type: {type(check_out)}")
 
     rooms = hotel.get_available_rooms(check_in, check_out)  # สมมติว่าได้ list ของ Room object ที่ available ในช่วงเวลานั้น
     room_list = [{
@@ -89,8 +95,32 @@ def rooms_available():
         "description": room.description,
         "details": room.details
     } for room in rooms]
-    print(room_list)
     return jsonify(room_list)  # ส่ง list ของ dictionary กลับไป
+
+@app.route('/api/get_review_by_room_id', methods=['POST'])
+def get_review_by_room_id():
+    username = request.json['username']
+    room_id = request.json['room_id']
+
+    user = hotel.get_user_by_username(username)
+    reviews = hotel.get_review_by_room_id(room_id)
+
+    if user and reviews:
+        response =[]
+        for review in reviews:
+            response.append({
+                "id": review.id,
+                "room_id": review.room_id,
+                "customer": review.customer.name,
+                "rating": review.rating,
+                "comment": review.comment,
+                "date": review.date
+            })
+        print(response)
+        return jsonify(response),200
+    else:
+        return jsonify({"error": "Invalid username or room id"})
+
 
 @app.route('/api/select_room', methods=['POST'])
 def select_room():
@@ -130,6 +160,27 @@ def deselect_room():
         else:
             return jsonify({"error": "Room not selected"}), 400
         
+
+@app.route('/api/get_selected', methods=['POST'])
+def get_selected():
+    username = request.json['username']
+    user = hotel.get_user_by_username(username)
+    if user:
+        response = []
+        for room in user.selected_room:
+            response.append({
+                "id": room.id,
+                "type": room.type,
+                "price": room.price,
+                "capacity": room.capacity,
+                "image": room.image,
+                "description": room.description,
+                "details": room.details
+            })
+        return jsonify(response)
+    else:
+        return jsonify({"error": "User not found"}), 404
+        
 @app.route('/api/make_booking', methods=['POST'])
 def make_booking():
     username = request.json['username']
@@ -140,8 +191,12 @@ def make_booking():
     if user:
         booking = Booking(f"BOOK-{hotel.generate_booking_id()}", check_in, check_out, user)
         response = hotel.add_booking(booking)
+        print(booking.room)
         if booking and response:
-            return jsonify({"message": "Booking successful"}), 200
+            return jsonify({
+                "message": "Booking successful",
+                "booking_id": booking.id,
+            }), 200
         else:
             return jsonify({"error": "Booking failed"}), 400
     else:
@@ -281,7 +336,7 @@ def add_review():
     room = hotel.get_room_by_id(room_id)
 
     if user and room:
-        review = Review(f"REV--{hotel.generate_review_id()}", room_id, user, comment, rating)
+        review = Review(f"REV-{hotel.generate_review_id()}", room_id, user, comment, rating)
         response = hotel.add_review(review)
         print(response)
         if response:
@@ -341,6 +396,40 @@ def my_feedback():
         return jsonify(response)
     else:
         return jsonify({"error": "Feedback not found"}), 404     
+    
+@app.route('/api/edit_my_feedback', methods=['Post'])
+def edit_my_feedback():
+    username = request.json['username']
+    feedback_id = request.json['feedback_id']
+    rating = request.json['rating']
+    comment = request.json['comment']
+
+    user = hotel.get_user_by_username(username)
+    feedback = hotel.get_feedback_by_id(feedback_id)
+
+    if user and feedback:
+        feedback.rating = rating
+        feedback.comment = comment
+        return jsonify({"message": "Feedback updated"}), 200
+    else:
+        return jsonify({"error": "Invalid username or feedback id"}), 400
+    
+@app.route('/api/delete_my_feedback', methods=['Post'])
+def delete_my_feedback():
+    username = request.json['username']
+    feedback_id = request.json['feedback_id']
+
+    user = hotel.get_user_by_username(username)
+    feedback = hotel.get_feedback_by_id(feedback_id)
+
+    if user and feedback:
+        response = hotel.delete_feedback(feedback)
+        if response:
+            return jsonify({"message": "Feedback deleted"}), 200
+        else:
+            return jsonify({"error": "Feedback not deleted"}), 400
+    else:
+        return jsonify({"error": "Invalid username or feedback id"}), 400
 
 @app.route('/api/my_review', methods=['Post'])
 def my_review():
@@ -361,6 +450,42 @@ def my_review():
         return jsonify(response)
     else:
         return jsonify({"error": "Review not found"}), 404  
+    
+@app.route('/api/edit_my_review', methods=['Post'])
+def edit_my_review():
+    username = request.json['username']
+    review_id = request.json['review_id']
+    rating = request.json['rating']
+    comment = request.json['comment']
+
+    user = hotel.get_user_by_username(username)
+    review = hotel.get_review_by_id(review_id)
+
+    if user and review:
+        review.rating = rating
+        review.comment = comment
+        return jsonify({"message": "Review updated"}), 200
+    else:
+        return jsonify({"error": "Invalid username or review id"}), 400
+    
+@app.route('/api/delete_my_review', methods=['Post'])
+def delete_my_review():
+    username = request.json['username']
+    review_id = request.json['review_id']
+
+    user = hotel.get_user_by_username(username)
+    review = hotel.get_review_by_id(review_id)
+
+    if user and review:
+        response = hotel.delete_review(review)
+        if response:
+            return jsonify({"message": "Review deleted"}), 200
+        else:
+            return jsonify({"error": "Review not deleted"}), 400
+    else:
+        return jsonify({"error": "Invalid username or review id"}), 400
+    
+
     
 @app.route('/api/admin/room/view', methods=['Post'])
 def room_view():
@@ -388,7 +513,7 @@ def room_add():
     username = request.json['username']
     user = hotel.get_user_by_username(username)
     if user and user.account.role == "admin":
-        room = Room(request.json['id'], request.json['type'], request.json['price'], request.json['capacity'], request.json['image'], request.json['description'], request.json['details'])
+        room = Room(request.json['id'], request.json['type'], int(request.json['price']), int(request.json['capacity']), request.json['image'], request.json['description'], request.json['details'])
         response = hotel.add_room(room)
         if response:
             return jsonify({"message": "Room added"}), 201
@@ -405,9 +530,9 @@ def room_update():
         room_id = request.json['room_id']
         room = hotel.get_room_by_id(room_id)
         if room:
-            room.type = request.json['price']
-            room.price = request.json['price']
-            room.capacity = request.json['capacity']
+            room.type = request.json['type']
+            room.price = int(request.json['price'])
+            room.capacity = int(request.json['capacity'])
             room.image = request.json['image']
             room.description = request.json['description']
             room.details = request.json['details']
@@ -486,7 +611,7 @@ def user_update():
             user.name = request.json['name']
             user.email = request.json['email']
             user.phone = request.json['phone']
-            user.account.password = request.json['password']
+            user.account.change_password(request.json['password'])
             
             return jsonify({"message": "User updated"}), 200
         else:
@@ -563,6 +688,25 @@ def booking_delete():
             return jsonify({"error": "Booking not found"}), 404
     else:
         return jsonify({"error": "Invalid username or role"}), 400
+
+@app.route('/api/admin/cancel_booking', methods=['POST'])
+def admin_cancel_booking():
+    username = request.json['username']
+    role = request.json['role']
+    book_id = request.json['book_id']
+
+    user = hotel.get_user_by_username(username)
+    booking = hotel.get_booking_by_id(book_id)
+
+    if user and booking and role == "admin":
+        response = booking.cancel_booking()
+        print(response)
+        if response:
+            return jsonify({"message": "Booking canceled"}), 200
+        else:
+            return jsonify({"error": "Booking not canceled"}), 400
+    else:
+        return jsonify({"error": "Invalid username or booking id"}), 400
     
 
     
@@ -590,7 +734,7 @@ def discount_add():
     username = request.json['username']
     user = hotel.get_user_by_username(username)
     if user and user.account.role == "admin":
-        discount = Discount(request.json['code'], request.json['percent'])
+        discount = Discount(request.json['code'], int(request.json['percent']))
         response = hotel.add_discount(discount)
         if response:
             return jsonify({"message": "Discount added"}), 201
@@ -607,7 +751,7 @@ def discount_update():
         code = request.json['code']
         discount = hotel.get_discount_by_code(code)
         if discount:
-            discount.value = request.json['percent']
+            discount.value = int(request.json['percent'])
             return jsonify({"message": "Discount updated"}), 200
         else:
             return jsonify({"error": "Discount not found"}), 404
@@ -721,6 +865,7 @@ def get_booking_by_username(booking_id):
     if booking:
         return jsonify({
             "booking_id": booking.id,
+            "day": booking.num_days(),
             "check_in": booking.check_in,
             "check_out": booking.check_out,
             "price": booking.price,
@@ -743,12 +888,16 @@ def get_booking_by_username(booking_id):
 @app.route('/api/booking/payment/<booking_id>', methods=['GET'])
 def get_booking_payment_by_booking_id(booking_id):
     booking = hotel.get_booking_by_id(booking_id)
+    print(booking)
     if booking:
         payment = booking.payment
+        print(payment)
         if payment:
             return jsonify({
+                "booking_id": booking.id,
                 "check_in": booking.check_in,
                 "check_out": booking.check_out,
+                "day": booking.num_days(),
                 "price": booking.price,
                 "final_price": booking.final_price,
                 "discount": booking.price - booking.final_price,
@@ -771,15 +920,16 @@ def get_booking_payment_by_booking_id(booking_id):
 def get_booking_invoice_by_booking_id(booking_id):
     booking = hotel.get_booking_by_id(booking_id)
     if booking:
-        invoice = booking.invoice
-        print(invoice)
-        if invoice:
+        if booking.invoice:
             return jsonify({
+                "booking_id": booking.id,
                 "check_in": booking.check_in,
                 "check_out": booking.check_out,
+                "day": booking.num_days(),
                 "price": booking.price,
                 "final_price": booking.final_price,
                 "discount": booking.price - booking.final_price,
+                "payment_method": booking.payment.method,
                 "room": [{
                     "id": room.id,
                     "type": room.type,
@@ -794,6 +944,7 @@ def get_booking_invoice_by_booking_id(booking_id):
             return jsonify({"error": "Invoice not found"}), 404
     else:
         return jsonify({"error": "Booking not found"}), 404
+
     
 if __name__ == '__main__':
     app.run(debug=True)

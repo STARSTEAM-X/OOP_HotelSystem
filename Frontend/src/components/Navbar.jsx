@@ -3,16 +3,32 @@ import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const navigate = useNavigate();
 
     // ดึงค่า username จาก localStorage
-    const userName = useMemo(() => localStorage.getItem("username"), []);
+    const username = useMemo(() => localStorage.getItem("username"), []);
+    const userrole = useMemo(() => localStorage.getItem("role"), []);
+
 
     // ตั้งค่า avatar อัตโนมัติ
     const avatar = useMemo(
-        () => (userName ? "https://cdn.discordapp.com/attachments/1252629751332474972/1342621093361356940/2.2.png?ex=67bc4715&is=67baf595&hm=6c397f909d8104fffd42d79d9582c7e2f1baf206ba404c1577b774815f4e6793&" : ""),
-        [userName]
+        () => (username ? "https://images-ext-1.discordapp.net/external/ggrILEyY1bj4lVlyLXrB6eT7lPCk1xekZ4tLjCVYMZk/%3Fsize%3D512/https/cdn.discordapp.com/avatars/693722639125970975/bdf4b98ff170edcc46ec3ada4937be44.webp?format=webp&width=640&height=640" : ""),
+        [username]
     );
+
+    useEffect(() => {
+        const checkAdminStatus = () => {
+            if (username && userrole === "admin") {
+                setIsAdmin(true);
+            } else {
+                setIsAdmin(false);
+            }
+        };
+
+        checkAdminStatus();
+    }, [username, userrole]);
+
 
     useEffect(() => {
         const handleStorageChange = () => {
@@ -25,6 +41,7 @@ export default function Navbar() {
 
     const handleLogout = () => {
         localStorage.removeItem("username");
+        localStorage.removeItem("role");
         setIsProfileOpen(false);
         navigate("/register");
         window.dispatchEvent(new Event("storage")); // แจ้งให้ Component อื่นอัปเดต
@@ -33,15 +50,29 @@ export default function Navbar() {
     return (
         <nav className="bg-white text-gray-900 shadow-lg">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                <a href="/" className="text-2xl font-bold text-gray-900">HotelSystem</a>
-
+                <a href={isAdmin ? "/admin/room" : "/"} className="text-2xl font-bold text-gray-900">HotelSystem</a>
                 <div className="hidden md:flex space-x-6">
-                    <a href="/home" className="text-gray-900 hover:text-indigo-600">Home</a>
-                    <a href="/viewbooking" className="text-gray-900 hover:text-indigo-600">View Booking</a>
-                    <a href="/manageroom" className="text-gray-900 hover:text-indigo-600">Management</a>
+                    {!isAdmin && (
+                        <>
+                            <a href="/home" className="text-gray-900 hover:text-indigo-600">Home</a>
+                            <a href="/my_booking" className="text-gray-900 hover:text-indigo-600">My Booking</a>
+                            <a href="/my_feedback" className="text-gray-900 hover:text-indigo-600">My Feedback</a>
+                            <a href="/my_review" className="text-gray-900 hover:text-indigo-600">My Review</a>
+                        </>
+                    )}
+                    {isAdmin && (
+                        <>
+                            <a href="/admin/room" className="text-gray-900 hover:text-indigo-600">Room</a>
+                            <a href="/admin/user" className="text-gray-900 hover:text-indigo-600">User</a>
+                            <a href="/admin/booking" className="text-gray-900 hover:text-indigo-600">Booking</a>
+                            <a href="/admin/discount" className="text-gray-900 hover:text-indigo-600">Discount</a>
+                            <a href="/admin/feedback" className="text-gray-900 hover:text-indigo-600">Feedback</a>
+                            <a href="/admin/review" className="text-gray-900 hover:text-indigo-600">Review</a>
+                        </>
+                    )}
                 </div>
 
-                {userName ? (
+                {username ? (
                     <div className="relative">
                         <button
                             onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -54,7 +85,7 @@ export default function Navbar() {
                                     className="w-8 h-8 rounded-full border border-gray-300"
                                 />
                             )}
-                            <span className="hidden md:block font-medium">{userName}</span>
+                            <span className="hidden md:block font-medium">{username}</span>
                         </button>
 
                         {isProfileOpen && (
