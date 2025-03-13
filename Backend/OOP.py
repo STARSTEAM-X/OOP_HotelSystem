@@ -169,82 +169,62 @@ class Booking:
         self.__discount = None
         self.__payment = None
         self.__invoice = None
-
     @property
     def id(self):
         return self.__id
-    
     def num_days(self):
         return (datetime.strptime(self.__check_out, "%Y-%m-%d") - datetime.strptime(self.__check_in, "%Y-%m-%d")).days
-    
     @property
     def check_in(self):
         return self.__check_in
-    
     @property
     def check_out(self):
         return self.__check_out
-    
     @property
     def room(self):
         return self.__room
-    
     @property
     def price(self):
         return self.__price
-    
     @property
     def final_price(self):
         return self.__final_price
-    
     @property
     def customer(self):
         return self.__customer
-    
     @property
     def status(self):
         return self.__status
-    
-    @id.setter
-    def id(self, id):
-        self.__id = id
-
-    @check_in.setter
-    def check_in(self, check_in):
-        self.__check_in = check_in
-
-    @check_out.setter
-    def check_out(self, check_out):
-        self.__check_out = check_out
-
-    @room.setter
-    def room(self, room):
-        self.__room = room
-
-    @customer.setter
-    def customer(self, customer):
-        self.__customer = customer
-
-    @price.setter
-    def price(self, price):
-        self.__price = price
-    
-    @final_price.setter
-    def final_price(self, final_price):
-        self.__final_price = final_price
-
     @property
     def payment(self):
         return self.__payment
-    
     @property
     def invoice(self):
         return self.__invoice
-
+    @id.setter
+    def id(self, id):
+        self.__id = id
+    @check_in.setter
+    def check_in(self, check_in):
+        self.__check_in = check_in
+    @check_out.setter
+    def check_out(self, check_out):
+        self.__check_out = check_out
+    @room.setter
+    def room(self, room):
+        self.__room = room
+    @customer.setter
+    def customer(self, customer):
+        self.__customer = customer
+    @price.setter
+    def price(self, price):
+        self.__price = price
+    @final_price.setter
+    def final_price(self, final_price):
+        self.__final_price = final_price
     @status.setter
     def status(self, status):
         self.__status = status
-
     def apply_discount(self, discount):
         if self.__status == 1:
             return False #"Booking is Confirmed"
@@ -255,19 +235,15 @@ class Booking:
         else:
             self.__final_price = self.__price
             return False #"Invalid discount"
-
     def confirm_booking(self, hotel):
         # ตรวจสอบว่าห้องยังว่างอยู่หรือไม่ก่อนยืนยันการจอง
         for room in self.__room:
             if not hotel.check_availability(self.__check_in, self.__check_out, room):
                 return False #f"Room {room.id} is no longer available"
-        
         # ถ้าผ่านการตรวจสอบแล้ว ให้ทำการยืนยัน
         self.__payment = Payment(self, self.__final_price)
         self.__invoice = Invoice(self)
         return f"Booking {self.__id} has been confirmed"
-
-
     def cancel_booking(self):
         self.__status = 2
         if self.__payment:
@@ -275,14 +251,12 @@ class Booking:
         if self.__invoice:
             self.__invoice.status = 2
         return f"Booking {self.__id} has been cancelled"
-
     def make_payment(self, method):
         if self.__status == 0:
             self.__status = 1
             return self.__payment.make_payment(method)
         else:
             return False
-    
     def get_invoice(self):
         if not hasattr(self, '__invoice'):
             self.__invoice = Invoice(self)
@@ -316,7 +290,6 @@ class Payment:
         self.__booking = booking
         self.__method = None  # ยังไม่ระบุวิธีการชำระเงิน
         self.__amount = amount
-        self.__status = 0  # 0: Pending, 1: Paid, 2: Cancelled
 
     def make_payment(self, method):
         if self.__status == 1:
@@ -332,13 +305,6 @@ class Payment:
     def method(self):
         return self.__method
 
-    @property
-    def status(self):
-        return self.__status
-    
-    @status.setter
-    def status(self, status):
-        self.__status = status
 
 class Invoice:
     def __init__(self, booking):
@@ -398,31 +364,24 @@ class Review:
     @property
     def id(self):
         return self.__id
-
     @property
     def room_id(self):
         return self.__room_id
-
     @property
     def customer(self):
         return self.__customer
-    
     @property
     def rating(self):
         return self.__rating
-    
     @property
     def comment(self):
         return self.__comment
-    
     @rating.setter
     def rating(self, rating):
         self.__rating = rating
-
     @comment.setter
     def comment(self, comment):
         self.__comment = comment
-    
     @property
     def date(self):
         return self.__date
@@ -642,7 +601,7 @@ class Hotel:
     def get_available_rooms(self, check_in, check_out):
         available_rooms = []
         for room in self.__rooms:
-            if self.check_availability(check_in, check_out, room):  # Pass check_in, check_out as strings
+            if self.check_availability(check_in, check_out, room):
                 available_rooms.append(room)
         return available_rooms
 

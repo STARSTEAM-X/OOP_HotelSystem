@@ -77,6 +77,10 @@ export default function ManageDiscount() {
 
     const handleConfirmUpdate = async () => {
         try {
+            if (updateDiscountDetails.percent > 99 || updateDiscountDetails.percent < 0) {
+                setErrorMessage("Percent must be between 0 and 99.");
+                return;
+            }
             await axios.post("http://127.0.0.1:5000/api/admin/discount/update", {
                 username: localStorage.getItem("username"),
                 ...updateDiscountDetails

@@ -17,7 +17,7 @@ export default function Payment() {
     useEffect(() => {
         const fetchBookingDetails = async () => {
             try {
-                const { data } = await axios.get(`http://127.0.0.1:5000/api/booking/${booking_id}`);
+                const { data } = await axios.get(`http://127.0.0.1:5000/api/booking/payment/${booking_id}`);
                 setBookingDetails(data);
                 setAmount(data.final_price);
             } catch (error) {

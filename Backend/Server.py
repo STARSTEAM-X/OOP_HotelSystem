@@ -861,7 +861,7 @@ def review_delete():
         return jsonify({"error": "Invalid username or role"}), 400
 
 @app.route('/api/booking/<booking_id>', methods=['GET'])
-def get_booking_by_username(booking_id):
+def get_booking_by_id(booking_id):
     booking = hotel.get_booking_by_id(booking_id)
     if booking:
         return jsonify({

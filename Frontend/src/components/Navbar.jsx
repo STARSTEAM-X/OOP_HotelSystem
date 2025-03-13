@@ -91,12 +91,12 @@ export default function Navbar() {
                         {isProfileOpen && (
                             <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 bg-white border border-gray-200 shadow-lg rounded-md w-48 p-2 z-10 transition-all duration-300 ease-in-out">
                                 <ul className="flex flex-col space-y-1">
-                                    <li>
+                                    {/* <li>
                                         <a href="#" className="block px-4 py-2 text-gray-900 hover:bg-gray-100 rounded transition duration-200">Profile</a>
                                     </li>
                                     <li>
                                         <a href="#" className="block px-4 py-2 text-gray-900 hover:bg-gray-100 rounded transition duration-200">Settings</a>
-                                    </li>
+                                    </li> */}
                                     <li>
                                         <a onClick={handleLogout} className="block px-4 py-2 text-gray-900 hover:bg-red-600 hover:text-white rounded transition duration-200 cursor-pointer">Logout</a>
                                     </li>

@@ -21,7 +21,7 @@ export default function MyBooking() {
                 });
                 setBookings(data.sort((a, b) => b.booking_id.localeCompare(a.booking_id)));
             } catch (error) {
-                setErrorMessage("Failed to fetch bookings.");
+                // setErrorMessage("Failed to fetch bookings.");
             } finally {
                 setLoading(false);
             }

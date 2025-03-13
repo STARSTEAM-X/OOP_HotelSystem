@@ -24,7 +24,7 @@ export default function ManageBooking() {
             }
         } catch (error) {
             setBookings([]);
-            setErrorMessage("Failed to fetch bookings.");
+            // setErrorMessage("Failed to fetch bookings.");
         } finally {
             setLoading(false);
         }
