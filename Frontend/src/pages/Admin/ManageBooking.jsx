@@ -117,6 +117,7 @@ export default function ManageBooking() {
                                     <div className="flex justify-between items-center mb-4">
                                         <div>
                                             <h3 className="text-xl font-semibold text-gray-800">Booking ID: {booking.booking_id}</h3>
+                                            <p className="text-gray-600">Customer: {booking.customer}</p>
                                             <p className="text-gray-600">Check-in: {booking.check_in}</p>
                                             <p className="text-gray-600">Check-out: {booking.check_out}</p>
                                             <p className="text-gray-600">Price: ${booking.price}</p>

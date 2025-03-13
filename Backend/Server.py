@@ -604,14 +604,15 @@ def user_add():
 def user_update():
     username = request.json['username']
     user = hotel.get_user_by_username(username)
-    if user and user.account.role == "admin":
+    print(user.account.role)
+    if user:
         user = request.json['username_target']
         user = hotel.get_user_by_username(user)
         if user:
+            user.account.change_password(request.json['password'])
             user.name = request.json['name']
             user.email = request.json['email']
             user.phone = request.json['phone']
-            user.account.change_password(request.json['password'])
             
             return jsonify({"message": "User updated"}), 200
         else:
@@ -649,6 +650,7 @@ def booking_view():
             for booking in booking:
                 response.append({
                     "booking_id": booking.id,
+                    "customer": booking.customer.name,
                     "check_in": booking.check_in,
                     "check_out": booking.check_out,
                     "price": booking.price,

@@ -246,10 +246,6 @@ class Booking:
         return f"Booking {self.__id} has been confirmed"
     def cancel_booking(self):
         self.__status = 2
-        if self.__payment:
-            self.__payment.status = 2
-        if self.__invoice:
-            self.__invoice.status = 2
         return f"Booking {self.__id} has been cancelled"
     def make_payment(self, method):
         if self.__status == 0:
@@ -292,13 +288,10 @@ class Payment:
         self.__amount = amount
 
     def make_payment(self, method):
-        if self.__status == 1:
-            return False #"Payment already completed"
         if method not in ["Credit Card", "Bank Transfer", "Cash"]:
             return False #"Invalid payment method"
         
         self.__method = method
-        self.__status = 1  # เปลี่ยนสถานะเป็น Paid
         return f"Payment for booking {self.__booking.id} completed via {method}"
     
     @property
@@ -415,6 +408,9 @@ class Hotel:
 
     def add_room(self, room):
             if room not in self.__rooms:
+                for room_in in self.__rooms:
+                    if room_in.id == room.id :
+                        return False
                 self.__rooms.append(room)
                 return f'Room {room.id} has been added'
             else:
