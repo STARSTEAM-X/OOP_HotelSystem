@@ -1,0 +1,92 @@
+sequenceDiagram
+    actor ADMIN
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Discount
+
+    ADMIN->>+FlaskApp: POST /api/admin/discount/view (username)
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_all_discounts()
+        Hotel->>+Hotel: Retrieve all discounts
+        Hotel-->>+FlaskApp: Discount list
+        alt Discount list found
+            FlaskApp->>+Discount: Get discount details
+            loop For each discount in discount_list
+                Discount-->>+FlaskApp: Discount details (code, percent)
+            end
+            FlaskApp-->>-ADMIN: Discount list details (200 OK)
+        else Discount list not found
+            FlaskApp-->>-ADMIN: {"error": "Discount not found"} (404 Not Found)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/discount/add (username, code, percent)
+    FlaskApp->>+FlaskApp: Extract discount details from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Discount: Create Discount instance (code, percent)
+        Discount-->>+FlaskApp: Discount instance
+        FlaskApp->>+Hotel: add_discount(discount)
+        Hotel->>+Hotel: Add discount to records
+        Hotel-->>+FlaskApp: Response (True/False)
+        alt Discount added successfully
+            FlaskApp-->>-ADMIN: {"message": "Discount added"} (201 Created)
+        else Discount not added
+            FlaskApp-->>-ADMIN: {"error": "Discount not added"} (400 Bad Request)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/discount/update (username, code, percent)
+    FlaskApp->>+FlaskApp: Extract discount details from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_discount_by_code(code)
+        Hotel->>+Hotel: Find Discount by code
+        Hotel-->>+FlaskApp: Discount instance
+        alt Discount found
+            FlaskApp->>+Discount: Update discount value (percent)
+            Discount-->>+FlaskApp: Discount updated
+            FlaskApp-->>-ADMIN: {"message": "Discount updated"} (200 OK)
+        else Discount not found
+            FlaskApp-->>-ADMIN: {"error": "Discount not found"} (404 Not Found)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/discount/delete (username, code)
+    FlaskApp->>+FlaskApp: Extract code from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_discount_by_code(code)
+        Hotel->>+Hotel: Find Discount by code
+        Hotel-->>+FlaskApp: Discount instance
+        alt Discount found
+            FlaskApp->>+Hotel: delete_discount(discount)
+            Hotel->>+Hotel: Remove discount from records
+            Hotel-->>+FlaskApp: Response (True/False)
+            alt Discount deleted successfully
+                FlaskApp-->>-ADMIN: {"message": "Discount deleted"} (200 OK)
+            else Discount not deleted
+                FlaskApp-->>-ADMIN: {"error": "Discount not deleted"} (400 Bad Request)
+            end
+        else Discount not found
+            FlaskApp-->>-ADMIN: {"error": "Discount not found"} (404 Not Found)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end

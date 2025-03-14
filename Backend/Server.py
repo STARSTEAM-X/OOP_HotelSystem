@@ -272,24 +272,6 @@ def confirm_booking():
     else:
         return jsonify({"error": "Invalid username or booking id"}), 400
     
-@app.route('/api/cancel_booking', methods=['POST'])
-def cancel_booking():
-    username = request.json['username']
-    book_id = request.json['book_id']
-
-    user = hotel.get_user_by_username(username)
-    booking = hotel.get_booking_by_id(book_id)
-
-    if user and booking:
-        response = booking.cancel_booking()
-        print(response)
-        if response:
-            return jsonify({"message": "Booking canceled"}), 200
-        else:
-            return jsonify({"error": "Booking not canceled"}), 400
-    else:
-        return jsonify({"error": "Invalid username or booking id"}), 400
-    
 @app.route('/api/booking/payment/<booking_id>', methods=['GET'])
 def get_booking_payment_by_booking_id(booking_id):
     booking = hotel.get_booking_by_id(booking_id)
@@ -387,6 +369,56 @@ def booking_invoice():
             return jsonify({"error": "Invoice not generated"}), 400
     else:
         return jsonify({"error": "Invalid username or booking id"}), 400
+    
+@app.route('/api/my_booking', methods=['Post'])
+def my_booking():
+    username = request.json['username']
+    user = hotel.get_user_by_username(username)
+    booking_list = hotel.get_booking_by_customer(user) # สมมติว่าได้ list ของ Booking object ที่เป็นของ user นี้
+    if booking_list :
+        response = []
+        for booking in booking_list:
+            print(booking)
+            response.append({
+                "booking_id": booking.id,
+                "check_in": booking.check_in,
+                "check_out": booking.check_out,
+                "price": booking.price,
+                "final_price": booking.final_price,
+                "discount": booking.price - booking.final_price,
+                "status": booking.status,
+                "room": [{
+                    "id": room.id,
+                    "type": room.type,
+                    "price": room.price,
+                    "capacity": room.capacity,
+                    "image": room.image,
+                    "description": room.description,
+                    "details": room.details
+                } for room in booking.room],
+            })
+        return jsonify(response)
+    else:
+        return jsonify({"error": "Booking not found"}), 404
+    
+
+@app.route('/api/cancel_booking', methods=['POST'])
+def cancel_booking():
+    username = request.json['username']
+    book_id = request.json['book_id']
+
+    user = hotel.get_user_by_username(username)
+    booking = hotel.get_booking_by_id(book_id)
+
+    if user and booking:
+        response = booking.cancel_booking()
+        print(response)
+        if response:
+            return jsonify({"message": "Booking canceled"}), 200
+        else:
+            return jsonify({"error": "Booking not canceled"}), 400
+    else:
+        return jsonify({"error": "Invalid username or booking id"}), 400
 
 
 @app.route('/api/add_feedback', methods=['POST'])
@@ -431,36 +463,7 @@ def add_review():
     else:
         return jsonify({"error": "Invalid username or room id"}), 400
     
-@app.route('/api/my_booking', methods=['Post'])
-def my_booking():
-    username = request.json['username']
-    user = hotel.get_user_by_username(username)
-    booking_list = hotel.get_booking_by_customer(user) # สมมติว่าได้ list ของ Booking object ที่เป็นของ user นี้
-    if booking_list :
-        response = []
-        for booking in booking_list:
-            print(booking)
-            response.append({
-                "booking_id": booking.id,
-                "check_in": booking.check_in,
-                "check_out": booking.check_out,
-                "price": booking.price,
-                "final_price": booking.final_price,
-                "discount": booking.price - booking.final_price,
-                "status": booking.status,
-                "room": [{
-                    "id": room.id,
-                    "type": room.type,
-                    "price": room.price,
-                    "capacity": room.capacity,
-                    "image": room.image,
-                    "description": room.description,
-                    "details": room.details
-                } for room in booking.room],
-            })
-        return jsonify(response)
-    else:
-        return jsonify({"error": "Booking not found"}), 404
+
         
 @app.route('/api/my_feedback', methods=['Post'])
 def my_feedback():

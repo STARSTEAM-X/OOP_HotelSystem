@@ -1,0 +1,67 @@
+sequenceDiagram
+    actor ADMIN
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Booking
+    participant Room
+
+    ADMIN->>+FlaskApp: POST /api/admin/booking/view (username)
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_all_bookings()
+        Hotel->>+Hotel: Retrieve all bookings
+        Hotel-->>+FlaskApp: Booking list
+        FlaskApp->>+Booking: Get booking details
+        loop For each booking in booking_list
+            Booking-->>+FlaskApp: Booking details (id, customer.name, check_in, check_out, price, final_price, status)
+            Booking->>+Room: Get room details (id, type, price, capacity, image, description, details)
+            Room-->>+Booking: Room details
+        end
+        FlaskApp-->>-ADMIN: Booking list details (200 OK)
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/booking/delete (username, booking_id)
+    FlaskApp->>+FlaskApp: Extract booking_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_booking_by_id(booking_id)
+        Hotel->>+Hotel: Find Booking by booking_id
+        Hotel-->>+FlaskApp: Booking instance
+        alt Booking found
+            FlaskApp->>+Hotel: delete_booking(booking)
+            Hotel->>+Hotel: Remove booking from records
+            Hotel-->>+FlaskApp: Response (True/False)
+            alt Booking deleted successfully
+                FlaskApp-->>-ADMIN: {"message": "Booking deleted"} (200 OK)
+            else Booking not deleted
+                FlaskApp-->>-ADMIN: {"error": "Booking not deleted"} (400 Bad Request)
+            end
+        else Booking not found
+            FlaskApp-->>-ADMIN: {"error": "Booking not found"} (404 Not Found)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/cancel_booking (username, role, book_id)
+    FlaskApp->>+FlaskApp: Extract role, book_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_booking_by_id(book_id)
+    Hotel->>+Hotel: Find Booking by book_id
+    Hotel-->>+FlaskApp: Booking instance
+    alt User is admin and Booking found
+        FlaskApp->>+Booking: cancel_booking()
+        Booking-->>+FlaskApp: "Booking canceled"
+        FlaskApp-->>-ADMIN: {"message": "Booking canceled"} (200 OK)
+    else Invalid username or booking id
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or booking id"} (400 Bad Request)
+    end

@@ -1,0 +1,95 @@
+sequenceDiagram
+    actor ADMIN
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Account
+
+    ADMIN->>+FlaskApp: POST /api/admin/user/view (username)
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_all_users()
+        Hotel->>+Hotel: Retrieve all users
+        Hotel-->>+FlaskApp: User list
+        FlaskApp->>+User: Get user details
+        loop For each user in user_list
+            User-->>+FlaskApp: User details (name, email, phone, username, role)
+        end
+        FlaskApp-->>-ADMIN: User list details (200 OK)
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/user/add (username, name, email, phone, username_new, password, role, position)
+    FlaskApp->>+FlaskApp: Extract user details from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        alt Role is admin
+            FlaskApp->>+User: Create Admin instance (name, email, phone, Account(username_new, password, role), position)
+            User-->>+FlaskApp: Admin instance
+        else Role is customer
+            FlaskApp->>+User: Create Customer instance (name, email, phone, Account(username_new, password, role))
+            User-->>+FlaskApp: Customer instance
+        end
+        FlaskApp->>+Hotel: add_user(new_user)
+        Hotel->>+Hotel: Add user to records
+        Hotel-->>+FlaskApp: Response (True/False)
+        alt User added successfully
+            FlaskApp-->>-ADMIN: {"message": "User added"} (201 Created)
+        else User not added
+            FlaskApp-->>-ADMIN: {"error": "User not added"} (400 Bad Request)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/user/update (username, username_target, name, email, phone, password)
+    FlaskApp->>+FlaskApp: Extract user details from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_user_by_username(username_target)
+        Hotel->>+Hotel: Find User by username_target
+        Hotel-->>+FlaskApp: Target User instance
+        alt User found
+            FlaskApp->>+Account: change_password(password)
+            Account-->>+FlaskApp: Password updated
+            FlaskApp->>+User: Update user details (name, email, phone)
+            User-->>+FlaskApp: User details updated
+            FlaskApp-->>-ADMIN: {"message": "User updated"} (200 OK)
+        else User not found
+            FlaskApp-->>-ADMIN: {"error": "User not found"} (404 Not Found)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/user/delete (username, username_target)
+    FlaskApp->>+FlaskApp: Extract username_target from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_user_by_username(username_target)
+        Hotel->>+Hotel: Find User by username_target
+        Hotel-->>+FlaskApp: Target User instance
+        alt User found
+            FlaskApp->>+Hotel: delete_user(user)
+            Hotel->>+Hotel: Remove user from records
+            Hotel-->>+FlaskApp: Response (True/False)
+            alt User deleted successfully
+                FlaskApp-->>-ADMIN: {"message": "User deleted"} (200 OK)
+            else User not deleted
+                FlaskApp-->>-ADMIN: {"error": "User not deleted"} (400 Bad Request)
+            end
+        else User not found
+            FlaskApp-->>-ADMIN: {"error": "User not found"} (404 Not Found)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end

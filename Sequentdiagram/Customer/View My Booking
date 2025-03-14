@@ -1,0 +1,92 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Booking
+    participant Feedback
+    participant Review
+    participant Room
+
+    CUSTOMER->>+FlaskApp: POST /api/my_booking (username)
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_booking_by_customer(user)
+    Hotel->>+Hotel: Find Bookings by User
+    Hotel-->>+FlaskApp: Booking list
+    alt Booking list found
+        FlaskApp->>+Booking: Get booking details
+        loop For each booking in booking_list
+            Booking->>+Room: Get room details (id, type, price, capacity, image, description, details)
+            Room-->>+Booking: Room details
+            Booking-->>+FlaskApp: Booking details (id, check_in, check_out, price, final_price, discount, status, room)
+        end
+        FlaskApp-->>-CUSTOMER: Booking list details (200 OK)
+    else Booking list not found
+        FlaskApp-->>-CUSTOMER: {"error": "Booking not found"} (404 Not Found)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/cancel_booking (username, book_id)
+    FlaskApp->>+FlaskApp: Extract username, book_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_booking_by_id(book_id)
+    Hotel->>+Hotel: Find Booking by book_id
+    Hotel-->>+FlaskApp: Booking instance
+    alt User and Booking found
+        FlaskApp->>+Booking: cancel_booking()
+        Booking-->>+FlaskApp: "Booking canceled"
+        FlaskApp-->>-CUSTOMER: {"message": "Booking canceled"} (200 OK)
+    else Invalid username or booking id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or booking id"} (400 Bad Request)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/add_feedback (username, book_id, rating, comment)
+    FlaskApp->>+FlaskApp: Extract username, book_id, rating, comment from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_booking_by_id(book_id)
+    Hotel->>+Hotel: Find Booking by book_id
+    Hotel-->>+FlaskApp: Booking instance
+    alt User and Booking found
+        FlaskApp->>+Hotel: generate_feedback_id()
+        Hotel-->>+FlaskApp: Feedback ID
+        FlaskApp->>+Feedback: Create Feedback instance (id, user, comment, rating)
+        Feedback-->>+FlaskApp: Feedback instance
+        FlaskApp->>+Hotel: add_feedback(feedback)
+        Hotel-->>+FlaskApp: Response (True/False)
+        alt Feedback added successfully
+            FlaskApp-->>-CUSTOMER: {"message": "Feedback added"} (200 OK)
+        else Feedback not added
+            FlaskApp-->>-CUSTOMER: {"error": "Feedback not added"} (400 Bad Request)
+        end
+    else Invalid username or booking id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or booking id"} (400 Bad Request)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/add_review (username, room_id, rating, comment)
+    FlaskApp->>+FlaskApp: Extract username, room_id, rating, comment from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_room_by_id(room_id)
+    Hotel->>+Hotel: Find Room by room_id
+    Hotel-->>+FlaskApp: Room instance
+    alt User and Room found
+        FlaskApp->>+Hotel: generate_review_id()
+        Hotel-->>+FlaskApp: Review ID
+        FlaskApp->>+Review: Create Review instance (id, room_id, user, comment, rating)
+        Review-->>+FlaskApp: Review instance
+        FlaskApp->>+Hotel: add_review(review)
+        Hotel-->>+FlaskApp: Response (True/False)
+        alt Review added successfully
+            FlaskApp-->>-CUSTOMER: {"message": "Review added"} (200 OK)
+        else Review not added
+            FlaskApp-->>-CUSTOMER: {"error": "Review not added"} (400 Bad Request)
+        end
+    else Invalid username or room id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or room id"} (400 Bad Request)
+    end

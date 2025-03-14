@@ -1,0 +1,61 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Review
+
+    CUSTOMER->>+FlaskApp: POST /api/my_review (username)
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_review_by_customer(user)
+    Hotel->>+Hotel: Find Review list by User
+    Hotel-->>+FlaskApp: Review list
+    alt Review list found
+        FlaskApp->>+Review: Get review details
+        loop For each review in review_list
+            Review-->>+FlaskApp: Review details (id, date, customer name, room_id, rating, comment)
+        end
+        FlaskApp-->>-CUSTOMER: Review list details (200 OK)
+    else Review list not found
+        FlaskApp-->>-CUSTOMER: {"error": "Review not found"} (404 Not Found)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/edit_my_review (username, review_id, rating, comment)
+    FlaskApp->>+FlaskApp: Extract username, review_id, rating, comment from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_review_by_id(review_id)
+    Hotel->>+Hotel: Find Review by review_id
+    Hotel-->>+FlaskApp: Review instance
+    alt User and Review found
+        FlaskApp->>+Review: Update review (rating, comment)
+        Review->>+Review: Update rating and comment
+        Review-->>+FlaskApp: "Review updated"
+        FlaskApp-->>-CUSTOMER: {"message": "Review updated"} (200 OK)
+    else Invalid username or review id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or review id"} (400 Bad Request)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/delete_my_review (username, review_id)
+    FlaskApp->>+FlaskApp: Extract username, review_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_review_by_id(review_id)
+    Hotel->>+Hotel: Find Review by review_id
+    Hotel-->>+FlaskApp: Review instance
+    alt User and Review found
+        FlaskApp->>+Hotel: delete_review(review)
+        Hotel->>+Hotel: Remove review from records
+        Hotel-->>+FlaskApp: Response (True/False)
+        alt Review deleted successfully
+            FlaskApp-->>-CUSTOMER: {"message": "Review deleted"} (200 OK)
+        else Review not deleted
+            FlaskApp-->>-CUSTOMER: {"error": "Review not deleted"} (400 Bad Request)
+        end
+    else Invalid username or review id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or review id"} (400 Bad Request)
+    end

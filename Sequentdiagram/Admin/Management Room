@@ -1,0 +1,88 @@
+sequenceDiagram
+    actor ADMIN
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Room
+
+    ADMIN->>+FlaskApp: POST /api/admin/room/view (username)
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_all_rooms()
+        Hotel->>+Hotel: Retrieve all rooms
+        Hotel-->>+FlaskApp: Room list
+        FlaskApp->>+Room: Get room details
+        loop For each room in room_list
+            Room-->>+FlaskApp: Room details (id, type, price, capacity, image, description, details)
+        end
+        FlaskApp-->>-ADMIN: Room list details (200 OK)
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/room/add (username, id, type, price, capacity, image, description, details)
+    FlaskApp->>+FlaskApp: Extract room details from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Room: Create Room instance (id, type, price, capacity, image, description, details)
+        Room-->>+FlaskApp: Room instance
+        FlaskApp->>+Hotel: add_room(room)
+        Hotel->>+Hotel: Add room to records
+        Hotel-->>+FlaskApp: Response (True/False)
+        alt Room added successfully
+            FlaskApp-->>-ADMIN: {"message": "Room added"} (201 Created)
+        else Room not added
+            FlaskApp-->>-ADMIN: {"error": "Room not added"} (400 Bad Request)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/room/update (username, room_id, type, price, capacity, image, description, details)
+    FlaskApp->>+FlaskApp: Extract room details from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_room_by_id(room_id)
+        Hotel->>+Hotel: Find Room by room_id
+        Hotel-->>+FlaskApp: Room instance
+        alt Room found
+            FlaskApp->>+Room: Update room details (type, price, capacity, image, description, details)
+            Room-->>+FlaskApp: Room updated
+            FlaskApp-->>-ADMIN: {"message": "Room updated"} (200 OK)
+        else Room not found
+            FlaskApp-->>-ADMIN: {"error": "Room not found"} (404 Not Found)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end
+
+    ADMIN->>+FlaskApp: POST /api/admin/room/delete (username, room_id)
+    FlaskApp->>+FlaskApp: Extract room_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User is admin
+        FlaskApp->>+Hotel: get_room_by_id(room_id)
+        Hotel->>+Hotel: Find Room by room_id
+        Hotel-->>+FlaskApp: Room instance
+        alt Room found
+            FlaskApp->>+Hotel: delete_room(room)
+            Hotel->>+Hotel: Remove room from records
+            Hotel-->>+FlaskApp: Response (True/False)
+            alt Room deleted successfully
+                FlaskApp-->>-ADMIN: {"message": "Room deleted"} (200 OK)
+            else Room not deleted
+                FlaskApp-->>-ADMIN: {"error": "Room not deleted"} (400 Bad Request)
+            end
+        else Room not found
+            FlaskApp-->>-ADMIN: {"error": "Room not found"} (404 Not Found)
+        end
+    else Invalid username or role
+        FlaskApp-->>-ADMIN: {"error": "Invalid username or role"} (400 Bad Request)
+    end

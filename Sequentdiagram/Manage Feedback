@@ -1,0 +1,61 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Feedback
+
+    CUSTOMER->>+FlaskApp: POST /api/my_feedback (username)
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_feedback_by_customer(user)
+    Hotel->>+Hotel: Find Feedback list by User
+    Hotel-->>+FlaskApp: Feedback list
+    alt Feedback list found
+        FlaskApp->>+Feedback: Get feedback details
+        loop For each feedback in feedback_list
+            Feedback-->>+FlaskApp: Feedback details (id, date, customer name, rating, comment)
+        end
+        FlaskApp-->>-CUSTOMER: Feedback list details (200 OK)
+    else Feedback list not found
+        FlaskApp-->>-CUSTOMER: {"error": "Feedback not found"} (404 Not Found)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/edit_my_feedback (username, feedback_id, rating, comment)
+    FlaskApp->>+FlaskApp: Extract username, feedback_id, rating, comment from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_feedback_by_id(feedback_id)
+    Hotel->>+Hotel: Find Feedback by feedback_id
+    Hotel-->>+FlaskApp: Feedback instance
+    alt User and Feedback found
+        FlaskApp->>+Feedback: Update feedback (rating, comment)
+        Feedback->>+Feedback: Update rating and comment
+        Feedback-->>+FlaskApp: "Feedback updated"
+        FlaskApp-->>-CUSTOMER: {"message": "Feedback updated"} (200 OK)
+    else Invalid username or feedback id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or feedback id"} (400 Bad Request)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/delete_my_feedback (username, feedback_id)
+    FlaskApp->>+FlaskApp: Extract username, feedback_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_feedback_by_id(feedback_id)
+    Hotel->>+Hotel: Find Feedback by feedback_id
+    Hotel-->>+FlaskApp: Feedback instance
+    alt User and Feedback found
+        FlaskApp->>+Hotel: delete_feedback(feedback)
+        Hotel->>+Hotel: Remove feedback from records
+        Hotel-->>+FlaskApp: Response (True/False)
+        alt Feedback deleted successfully
+            FlaskApp-->>-CUSTOMER: {"message": "Feedback deleted"} (200 OK)
+        else Feedback not deleted
+            FlaskApp-->>-CUSTOMER: {"error": "Feedback not deleted"} (400 Bad Request)
+        end
+    else Invalid username or feedback id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or feedback id"} (400 Bad Request)
+    end
