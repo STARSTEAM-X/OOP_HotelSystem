@@ -1,0 +1,21 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant Customer
+    participant Account
+
+    CUSTOMER->>+FlaskApp: POST /api/register (name, email, phone, username, password)
+    FlaskApp->>+FlaskApp: Extract name, email, phone, username, password from JSON request
+    FlaskApp->>+Account: Create Account(username, password, "customer")
+    Account-->>-FlaskApp: Account instance
+    FlaskApp->>+Customer: Create Customer(name, email, phone, Account)
+    Customer-->>-FlaskApp: Customer instance
+    FlaskApp->>+Hotel: hotel.add_user(Customer)
+    alt Registration successful
+        Hotel-->>FlaskApp: True
+        FlaskApp-->>-CUSTOMER: {"message": "Registration successful"} (201 Created)
+    else Registration failed
+        Hotel-->>FlaskApp: False
+        FlaskApp-->>-CUSTOMER: {"error": "Registration failed"} (400 Bad Request)
+    end

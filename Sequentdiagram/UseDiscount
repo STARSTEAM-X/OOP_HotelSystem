@@ -1,0 +1,34 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Booking
+    participant Discount
+
+    CUSTOMER->>+FlaskApp: POST /api/use_discount (username, book_id, discount_code)
+    FlaskApp->>+FlaskApp: Extract username, book_id, discount_code from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_booking_by_id(book_id)
+    Hotel->>+Hotel: Find Booking by book_id
+    Hotel-->>+FlaskApp: Booking instance
+    FlaskApp->>+Hotel: get_discount_by_code(discount_code)
+    Hotel->>+Hotel: Find Discount by discount_code
+    Hotel-->>+FlaskApp: Discount instance
+    alt User, Booking, and Discount found
+        FlaskApp->>+Booking: apply_discount(discount)
+        Booking->>+Discount: Check discount validity and apply
+        alt Discount valid and applied
+            Discount-->>+Booking: True
+            Booking-->>+FlaskApp: "Discount applied successfully"
+            FlaskApp-->>-CUSTOMER: {"booking_id": booking.id, "price": booking.price, "final_price": booking.final_price, "discount": booking.price - booking.final_price} (200 OK)
+        else Discount not valid
+            Discount-->>+Booking: False
+            Booking-->>+FlaskApp: "Discount not applied"
+            FlaskApp-->>-CUSTOMER: {"error": "Discount not found"} (400 Bad Request)
+        end
+    else Invalid username, booking, or discount code
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or discount code"} (400 Bad Request)
+    end

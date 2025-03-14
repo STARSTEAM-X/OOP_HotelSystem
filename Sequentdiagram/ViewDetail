@@ -1,0 +1,21 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant Review
+
+    CUSTOMER->>+FlaskApp: POST /api/get_review_by_room_id (username, room_id)
+    FlaskApp->>+FlaskApp: Extract username, room_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_review_by_room_id(room_id)
+    Hotel-->>+FlaskApp: List of Review instances
+    alt User and Reviews found
+        loop For each review in reviews
+            FlaskApp->>+Review: Get review details (id, room_id, customer, rating, comment, date)
+            Review-->>-FlaskApp: Review details
+        end
+        FlaskApp-->>-CUSTOMER: List of reviews as JSON response (200 OK)
+    else Invalid username or room id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or room id"} (400 Bad Request)
+    end

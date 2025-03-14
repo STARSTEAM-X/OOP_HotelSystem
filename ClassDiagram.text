@@ -1,0 +1,198 @@
+classDiagram
+    class Account {
+        -username: str
+        -password: str
+        -role: str
+        +username(): str
+        +role(): str
+        +login(username: str, password: str): bool
+        +change_password(new_password: str): bool
+    }
+
+    class User {
+        -name: str
+        -email: str
+        -phone: str
+        -account: Account
+        +name(): str
+        +email(): str
+        +phone(): str
+        +account(): Account
+    }
+
+    class Customer {
+        -selected_room: list
+        +selected_room(): list
+        +clear_selected_room()
+        +select_room(room: Room, hotel: Hotel, check_in: str, check_out: str): str
+        +delete_room(room: Room): str
+    }
+
+    class Admin {
+        -position: str
+
+        +position()
+    }
+
+    class Room {
+        -id: str
+        -type: str
+        -price: float
+        -capacity: int
+        -image: str
+        -description: str
+        -details: str
+        +id(): str
+        +type(): str
+        +price(): float
+        +capacity(): int
+        +image(): str
+        +description(): str
+        +details(): str
+    }
+
+    class Booking {
+        -id: str
+        -check_in: str
+        -check_out: str
+        -customer: Customer
+        -room: list
+        -price: float
+        -final_price: float
+        -status: int
+        -discount: Discount
+        -payment: Payment
+        -invoice: Invoice
+        +id(): str
+        +check_in(): str
+        +check_out(): str
+        +room(): list
+        +price(): float
+        +final_price(): float
+        +customer(): Customer
+        +status(): int
+        +payment(): Payment
+        +invoice(): Invoice
+        +apply_discount(discount: Discount): str
+        +confirm_booking(hotel: Hotel): str
+        +cancel_booking(): str
+        +make_payment(method: str): str
+        +get_invoice(): str
+    }
+
+    class Discount {
+        -code: str
+        -value: float
+        +code(): str
+        +value(): float
+    }
+
+    class Payment {
+        -booking: Booking
+        -method: str
+        -amount: float
+        +method(): str
+        +make_payment(method: str): str
+    }
+
+    class Invoice {
+        -id: str
+        -booking: Booking
+        -date: datetime
+        -amount: float
+        +get_invoice_details(): str
+    }
+
+    class Feedback {
+        -id: str
+        -customer: Customer
+        -comment: str
+        -rating: int
+        -date: datetime
+        +id(): str
+        +customer(): Customer
+        +comment(): str
+        +rating(): int
+        +date(): datetime
+    }
+
+    class Review {
+        -id: str
+        -room_id: str
+        -customer: Customer
+        -comment: str
+        -rating: int
+        -date: datetime
+        +id(): str
+        +room_id(): str
+        +customer(): Customer
+        +comment(): str
+        +rating(): int
+        +date(): datetime
+    }
+
+    class Hotel {
+        -name: str
+        -address: str
+        -phone_number: str
+        -email: str
+        -users: list
+        -rooms: list
+        -bookings: list
+        -discounts: list
+        -feedbacks: list
+        -reviews: list
+        +get_name(): str
+        +get_info(): str
+        +add_user(user: User): str
+        +add_room(room: Room): str
+        +add_booking(booking: Booking): str
+        +add_discount(discount: Discount): str
+        +add_feedback(feedback: Feedback): str
+        +add_review(review: Review): str
+        +delete_room(room: Room): str
+        +delete_user(user: User): str
+        +delete_booking(booking: Booking): str
+        +delete_discount(discount: Discount): str
+        +delete_feedback(feedback: Feedback): str
+        +delete_review(review: Review): str
+        +get_all_users(): list
+        +get_all_rooms(): list
+        +get_all_bookings(): list
+        +get_all_discounts(): list
+        +get_all_feedbacks(): list
+        +get_all_reviews(): list
+        +get_user_by_username(username: str): User
+        +get_room_by_id(id: str): Room
+        +get_booking_by_id(id: str): Booking
+        +get_discount_by_code(code: str): Discount
+        +get_feedback_by_id(id: str): Feedback
+        +get_review_by_id(id: str): Review
+        +get_feedback_by_customer(customer: Customer): list
+        +get_review_by_customer(customer: Customer): list
+        +get_review_by_room_id(room_id: str): list
+        +get_booking_by_customer(customer: Customer): list
+        +check_availability(check_in: str, check_out: str, rooms: Room): bool
+        +get_available_rooms(check_in: str, check_out: str): list
+        +generate_booking_id(): str
+        +generate_feedback_id(): str
+        +generate_review_id(): str
+        +authenticate(username: str, password: str): User
+    }
+
+    Hotel "1" o-- "*" User
+    User "1" *-- "1" Account
+    User  <|--  Admin
+    User <|-- Customer
+    Hotel "1" o-- "*" Room
+    Room "*" <-- "1" Customer
+    Hotel "1" o-- "*" Booking
+    Booking "1" --> "*" Room
+    Feedback "*" --> "1" Customer
+    Review "*" --> "1" Customer
+    Hotel "1" o-- "*" Discount
+    Booking "1" --> "1" Payment
+    Booking "1" --> "1" Invoice
+    Booking "1" --> "1" Discount
+    Hotel "1" o-- "*" Feedback
+    Hotel "1" o-- "*" Review

@@ -1,0 +1,28 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Booking
+
+    CUSTOMER->>+FlaskApp: POST /api/make_booking (username, check_in, check_out)
+    FlaskApp->>+FlaskApp: Extract username, check_in, check_out from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User found
+        FlaskApp->>+Hotel: generate_booking_id()
+        Hotel-->>+FlaskApp: Booking ID
+        FlaskApp->>+Booking: Create Booking instance (id, check_in, check_out, user)
+        Booking-->>+FlaskApp: Booking instance
+        FlaskApp->>+Hotel: add_booking(booking)
+        Hotel-->>+FlaskApp: Response (True/False)
+        alt Booking added successfully
+            Booking->>+Booking: Assign room to booking
+            FlaskApp-->>-CUSTOMER: {"message": "Booking successful", "booking_id": booking.id} (200 OK)
+        else Booking failed
+            FlaskApp-->>-CUSTOMER: {"error": "Booking failed"} (400 Bad Request)
+        end
+    else Invalid username
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username"} (400 Bad Request)
+    end

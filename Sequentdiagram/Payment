@@ -1,0 +1,51 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Booking
+    participant Payment
+
+    CUSTOMER->>+FlaskApp: GET /api/booking/payment/<booking_id>
+    FlaskApp->>+Hotel: get_booking_by_id(booking_id)
+    Hotel->>+Hotel: Find Booking by booking_id
+    Hotel-->>+FlaskApp: Booking instance
+    alt Booking found
+        FlaskApp->>+Booking: Get payment
+        Booking-->>+FlaskApp: Payment instance
+        alt Payment found
+            FlaskApp->>+Booking: Get booking details
+            Booking->>+Room: Get room details (id, type, price, capacity, image, description, details)
+            Room-->>+Booking: Room details
+            Booking-->>+FlaskApp: Booking details (id, check_in, check_out, num_days, price, final_price, discount, room)
+            FlaskApp-->>-CUSTOMER: Booking and payment details (200 OK)
+        else Payment not found
+            FlaskApp-->>-CUSTOMER: {"error": "Payment not found"} (404 Not Found)
+        end
+    else Booking not found
+        FlaskApp-->>-CUSTOMER: {"error": "Booking not found"} (404 Not Found)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/booking_payment (username, book_id, payment_method)
+    FlaskApp->>+FlaskApp: Extract username, book_id, payment_method from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_booking_by_id(book_id)
+    Hotel->>+Hotel: Find Booking by book_id
+    Hotel-->>+FlaskApp: Booking instance
+    alt User and Booking found
+        FlaskApp->>+Booking: make_payment(payment_method)
+        Booking->>+Payment: Process payment with payment_method
+        alt Payment successful
+            Payment-->>Booking: True
+            Booking-->>+FlaskApp: "Payment successful"
+            FlaskApp-->>-CUSTOMER: {"message": "Payment successful"} (200 OK)
+        else Payment failed
+            Payment-->>Booking: False
+            Booking-->>+FlaskApp: "Payment failed"
+            FlaskApp-->>-CUSTOMER: {"error": "Payment failed"} (400 Bad Request)
+        end
+    else Invalid username or booking id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or booking id"} (400 Bad Request)
+    end

@@ -1,0 +1,21 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Account
+
+    CUSTOMER->>+FlaskApp: POST /api/login (username, password)
+    FlaskApp->>+FlaskApp: Extract username, password from JSON request
+    FlaskApp->>+Hotel: authenticate(username, password)
+    alt User authenticated
+        Hotel-->>FlaskApp: User instance
+        FlaskApp->>+User: Get account details from User
+        User->>+Account: login(username, password)
+        Account-->>-User: True
+        User-->>-FlaskApp: Account details
+        FlaskApp-->>-CUSTOMER: {"message": "Login successful", "username": user.account.username, "role": user.account.role} (200 OK)
+    else Authentication failed
+        Hotel-->>FlaskApp: None
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid credentials"} (401 Unauthorized)
+    end

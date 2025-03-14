@@ -1,0 +1,24 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant Room
+
+    CUSTOMER->>+FlaskApp: POST /api/rooms_available (check_in, check_out)
+    FlaskApp->>+FlaskApp: Extract check_in, check_out from JSON request
+    FlaskApp->>+Hotel: get_available_rooms(check_in, check_out)
+    loop For each room in Hotel
+        Hotel->>+Room: check_availability(check_in, check_out)
+        alt Room available
+            Room-->>Hotel: True
+        else Room not available
+            Room-->>Hotel: False
+        end
+    end
+    Hotel-->>+FlaskApp: List of available Room instances
+    FlaskApp->>+FlaskApp: Create room_list from Room instances
+    loop For each room in room_list
+        FlaskApp->>+Room: Get room details (id, type, price, capacity, image, description, details)
+        Room-->>-FlaskApp: Room details
+    end
+    FlaskApp-->>-CUSTOMER: room_list as JSON response

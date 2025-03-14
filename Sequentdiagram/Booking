@@ -1,0 +1,54 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Booking
+    participant Room
+
+    CUSTOMER->>+FlaskApp: GET /api/booking/<booking_id>
+    FlaskApp->>+Hotel: get_booking_by_id(booking_id)
+    Hotel->>+Hotel: Find Booking by booking_id
+    Hotel-->>+FlaskApp: Booking instance
+    alt Booking found
+        FlaskApp->>+Booking: num_days()
+        Booking-->>+FlaskApp: Number of days
+        FlaskApp->>+Booking: Get room details
+        Booking->>+Room: Get room details (id, type, price, capacity, image, description, details)
+        Room-->>+Booking: Room details
+        Booking-->>+FlaskApp: Booking details (id, num_days, check_in, check_out, price, final_price, discount, status, room)
+        FlaskApp-->>-CUSTOMER: Booking details (200 OK)
+    else Booking not found
+        FlaskApp-->>-CUSTOMER: {"error": "Booking not found"} (404 Not Found)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/confirm_booking (username, book_id)
+    FlaskApp->>+FlaskApp: Extract username, book_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_booking_by_id(book_id)
+    Hotel->>+Hotel: Find Booking by book_id
+    Hotel-->>+FlaskApp: Booking instance
+    alt User and Booking found
+        FlaskApp->>+Booking: confirm_booking(hotel)
+        Booking->>+Hotel: check_room_availability(room, check_in, check_out)
+        loop For each room in Hotel
+            Hotel->>+Room: Check if room is available for booking dates
+            alt Room available
+                Room-->>Hotel: True
+            else Room not available
+                Room-->>Hotel: False
+            end
+        end
+        alt Room available
+            Booking->>Booking: Update booking status to confirmed
+            Booking-->>+FlaskApp: "Booking confirmed"
+            FlaskApp-->>-CUSTOMER: {"message": "Booking confirmed"} (200 OK)
+        else Room not available
+            Booking-->>+FlaskApp: "Booking not confirmed"
+            FlaskApp-->>-CUSTOMER: {"error": "Booking not confirmed"} (400 Bad Request)
+        end
+    else Invalid username or booking id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or booking id"} (400 Bad Request)
+    end

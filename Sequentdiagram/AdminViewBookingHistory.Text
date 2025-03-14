@@ -1,8 +1,0 @@
-sequenceDiagram
-    participant UI
-    participant HotelSystem
-
-    UI->>HotelSystem: Request all Bookings
-    HotelSystem->>HotelSystem: Find all Bookings
-    HotelSystem->>UI: Return all Bookings
-    UI->>UI: Display Bookings

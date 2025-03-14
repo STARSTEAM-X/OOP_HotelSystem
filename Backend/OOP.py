@@ -89,6 +89,10 @@ class Admin(User):
         super().__init__(name, email, phone_number, account)
         self.__position = position
 
+    @property
+    def position(self):
+        return self.__position
+
 class Room:
     def __init__(self, id, type, price, capacity, image, description, details):
         self.__id = id

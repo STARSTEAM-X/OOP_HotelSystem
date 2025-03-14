@@ -1,0 +1,72 @@
+sequenceDiagram
+    actor CUSTOMER
+    participant FlaskApp as Flask Application
+    participant Hotel
+    participant User
+    participant Room
+
+    CUSTOMER->>+FlaskApp: POST /api/select_room (username, room_id, check_in, check_out)
+    FlaskApp->>+FlaskApp: Extract username, room_id, check_in, check_out from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_room_by_id(room_id)
+    Hotel->>+Hotel: Find Room by room_id
+    Hotel-->>+FlaskApp: Room instance
+    alt User and Room found
+        FlaskApp->>+User: select_room(room, hotel, check_in, check_out)
+        User->>+Hotel: check_availability(check_in, check_out, room)
+        loop For each booking in room.bookings
+            Hotel->>+Room: Check if booking overlaps with check_in, check_out
+            alt Booking overlaps
+                Room-->>Hotel: False
+            else No overlap
+                Room-->>Hotel: True
+            end
+        end
+        alt Room available
+            Hotel-->>+User: True
+            User-->>+FlaskApp: "Room {room.id} has been selected"
+            FlaskApp-->>-CUSTOMER: {"message": "Room selected"} (200 OK)
+        else Room not available
+            Hotel-->>+User: False
+            User-->>+FlaskApp: False
+            FlaskApp-->>-CUSTOMER: {"error": "Room not available"} (400 Bad Request)
+        end
+    else Invalid username or room id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or room id"} (400 Bad Request)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/deselect_room (username, room_id)
+    FlaskApp->>+FlaskApp: Extract username, room_id from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    FlaskApp->>+Hotel: get_room_by_id(room_id)
+    Hotel->>+Hotel: Find Room by room_id
+    Hotel-->>+FlaskApp: Room instance
+    alt User and Room found
+        FlaskApp->>+User: delete_room(room)
+        User-->>+User: Remove room from user's selected rooms
+        User-->>+FlaskApp: "Room {room.id} has been deselected"
+        FlaskApp-->>-CUSTOMER: {"message": "Room deselected"} (200 OK)
+    else Invalid username or room id
+        FlaskApp-->>-CUSTOMER: {"error": "Invalid username or room id"} (400 Bad Request)
+    end
+
+    CUSTOMER->>+FlaskApp: POST /api/get_selected (username)
+    FlaskApp->>+FlaskApp: Extract username from JSON request
+    FlaskApp->>+Hotel: get_user_by_username(username)
+    Hotel->>+Hotel: Find User by username
+    Hotel-->>+FlaskApp: User instance
+    alt User found
+        FlaskApp->>+User: Get selected rooms
+        loop For each room in user.selected_room
+            User->>+Room: Get room details (id, type, price, capacity, image, description, details)
+            Room-->>+User: Room details
+            User-->>+FlaskApp: Room details
+        end
+        FlaskApp-->>-CUSTOMER: List of selected rooms as JSON response
+    else User not found
+        FlaskApp-->>-CUSTOMER: {"error": "User not found"} (404 Not Found)
+    end

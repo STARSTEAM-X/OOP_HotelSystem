@@ -228,6 +228,31 @@ def use_discount():
     else:
         return jsonify({"error": "Invalid username or discount code"}), 400
     
+@app.route('/api/booking/<booking_id>', methods=['GET'])
+def get_booking_by_id(booking_id):
+    booking = hotel.get_booking_by_id(booking_id)
+    if booking:
+        return jsonify({
+            "booking_id": booking.id,
+            "day": booking.num_days(),
+            "check_in": booking.check_in,
+            "check_out": booking.check_out,
+            "price": booking.price,
+            "final_price": booking.final_price,
+            "discount": booking.price - booking.final_price,
+            "status": booking.status,
+            "room": [{
+                "id": room.id,
+                "type": room.type,
+                "price": room.price,
+                "capacity": room.capacity,
+                "image": room.image,
+                "description": room.description,
+                "details": room.details
+            } for room in booking.room],
+        }), 200
+    else:
+        return jsonify({"error": "Booking not found"}), 404
 
 @app.route('/api/confirm_booking', methods=['POST'])
 def confirm_booking():
@@ -264,6 +289,37 @@ def cancel_booking():
             return jsonify({"error": "Booking not canceled"}), 400
     else:
         return jsonify({"error": "Invalid username or booking id"}), 400
+    
+@app.route('/api/booking/payment/<booking_id>', methods=['GET'])
+def get_booking_payment_by_booking_id(booking_id):
+    booking = hotel.get_booking_by_id(booking_id)
+    print(booking)
+    if booking:
+        payment = booking.payment
+        print(payment)
+        if payment:
+            return jsonify({
+                "booking_id": booking.id,
+                "check_in": booking.check_in,
+                "check_out": booking.check_out,
+                "day": booking.num_days(),
+                "price": booking.price,
+                "final_price": booking.final_price,
+                "discount": booking.price - booking.final_price,
+                "room": [{
+                    "id": room.id,
+                    "type": room.type,
+                    "price": room.price,
+                    "capacity": room.capacity,
+                    "image": room.image,
+                    "description": room.description,
+                    "details": room.details
+                } for room in booking.room],
+            }), 200
+        else:
+            return jsonify({"error": "Payment not found"}), 404
+    else:
+        return jsonify({"error": "Booking not found"}), 404
 
 @app.route('/api/booking_payment', methods=['POST'])
 def booking_payment():
@@ -284,6 +340,35 @@ def booking_payment():
     else:
         return jsonify({"error": "Invalid username or booking id"}), 400
     
+
+@app.route('/api/booking/invoice/<booking_id>', methods=['GET'])
+def get_booking_invoice_by_booking_id(booking_id):
+    booking = hotel.get_booking_by_id(booking_id)
+    if booking:
+        if booking.invoice:
+            return jsonify({
+                "booking_id": booking.id,
+                "check_in": booking.check_in,
+                "check_out": booking.check_out,
+                "day": booking.num_days(),
+                "price": booking.price,
+                "final_price": booking.final_price,
+                "discount": booking.price - booking.final_price,
+                "payment_method": booking.payment.method,
+                "room": [{
+                    "id": room.id,
+                    "type": room.type,
+                    "price": room.price,
+                    "capacity": room.capacity,
+                    "image": room.image,
+                    "description": room.description,
+                    "details": room.details
+                } for room in booking.room],
+            }), 200
+        else:
+            return jsonify({"error": "Invoice not found"}), 404
+    else:
+        return jsonify({"error": "Booking not found"}), 404
 
 @app.route('/api/booking_invoice', methods=['POST'])
 def booking_invoice():
@@ -862,91 +947,11 @@ def review_delete():
     else:
         return jsonify({"error": "Invalid username or role"}), 400
 
-@app.route('/api/booking/<booking_id>', methods=['GET'])
-def get_booking_by_id(booking_id):
-    booking = hotel.get_booking_by_id(booking_id)
-    if booking:
-        return jsonify({
-            "booking_id": booking.id,
-            "day": booking.num_days(),
-            "check_in": booking.check_in,
-            "check_out": booking.check_out,
-            "price": booking.price,
-            "final_price": booking.final_price,
-            "discount": booking.price - booking.final_price,
-            "status": booking.status,
-            "room": [{
-                "id": room.id,
-                "type": room.type,
-                "price": room.price,
-                "capacity": room.capacity,
-                "image": room.image,
-                "description": room.description,
-                "details": room.details
-            } for room in booking.room],
-        }), 200
-    else:
-        return jsonify({"error": "Booking not found"}), 404
 
-@app.route('/api/booking/payment/<booking_id>', methods=['GET'])
-def get_booking_payment_by_booking_id(booking_id):
-    booking = hotel.get_booking_by_id(booking_id)
-    print(booking)
-    if booking:
-        payment = booking.payment
-        print(payment)
-        if payment:
-            return jsonify({
-                "booking_id": booking.id,
-                "check_in": booking.check_in,
-                "check_out": booking.check_out,
-                "day": booking.num_days(),
-                "price": booking.price,
-                "final_price": booking.final_price,
-                "discount": booking.price - booking.final_price,
-                "room": [{
-                    "id": room.id,
-                    "type": room.type,
-                    "price": room.price,
-                    "capacity": room.capacity,
-                    "image": room.image,
-                    "description": room.description,
-                    "details": room.details
-                } for room in booking.room],
-            }), 200
-        else:
-            return jsonify({"error": "Payment not found"}), 404
-    else:
-        return jsonify({"error": "Booking not found"}), 404
+
+
     
-@app.route('/api/booking/invoice/<booking_id>', methods=['GET'])
-def get_booking_invoice_by_booking_id(booking_id):
-    booking = hotel.get_booking_by_id(booking_id)
-    if booking:
-        if booking.invoice:
-            return jsonify({
-                "booking_id": booking.id,
-                "check_in": booking.check_in,
-                "check_out": booking.check_out,
-                "day": booking.num_days(),
-                "price": booking.price,
-                "final_price": booking.final_price,
-                "discount": booking.price - booking.final_price,
-                "payment_method": booking.payment.method,
-                "room": [{
-                    "id": room.id,
-                    "type": room.type,
-                    "price": room.price,
-                    "capacity": room.capacity,
-                    "image": room.image,
-                    "description": room.description,
-                    "details": room.details
-                } for room in booking.room],
-            }), 200
-        else:
-            return jsonify({"error": "Invoice not found"}), 404
-    else:
-        return jsonify({"error": "Booking not found"}), 404
+
 
     
 if __name__ == '__main__':
