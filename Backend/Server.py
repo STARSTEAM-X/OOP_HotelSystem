@@ -203,30 +203,7 @@ def make_booking():
         return jsonify({"error": "Invalid username"}), 400
     
 
-@app.route('/api/use_discount', methods=['POST'])
-def use_discount():
-    username = request.json['username']
-    book_id = request.json['book_id']
-    discount_code = request.json['discount_code']
 
-    user = hotel.get_user_by_username(username)
-    booking = hotel.get_booking_by_id(book_id)
-    discount = hotel.get_discount_by_code(discount_code)
-
-    if user and booking and discount:
-        respon = booking.apply_discount(discount)
-        print(respon)
-        if respon:
-            return jsonify({
-                "booking_id": booking.id,
-                "price": booking.price,
-                "final_price": booking.final_price,
-                "discount": booking.price - booking.final_price
-            }), 200
-        else:
-            return jsonify({"error": "Discount not found"}), 400
-    else:
-        return jsonify({"error": "Invalid username or discount code"}), 400
     
 @app.route('/api/booking/<booking_id>', methods=['GET'])
 def get_booking_by_id(booking_id):
@@ -253,6 +230,31 @@ def get_booking_by_id(booking_id):
         }), 200
     else:
         return jsonify({"error": "Booking not found"}), 404
+    
+@app.route('/api/use_discount', methods=['POST'])
+def use_discount():
+    username = request.json['username']
+    book_id = request.json['book_id']
+    discount_code = request.json['discount_code']
+
+    user = hotel.get_user_by_username(username)
+    booking = hotel.get_booking_by_id(book_id)
+    discount = hotel.get_discount_by_code(discount_code)
+
+    if user and booking and discount:
+        respon = booking.apply_discount(discount)
+        print(respon)
+        if respon:
+            return jsonify({
+                "booking_id": booking.id,
+                "price": booking.price,
+                "final_price": booking.final_price,
+                "discount": booking.price - booking.final_price
+            }), 200
+        else:
+            return jsonify({"error": "Discount not found"}), 400
+    else:
+        return jsonify({"error": "Invalid username or discount code"}), 400
 
 @app.route('/api/confirm_booking', methods=['POST'])
 def confirm_booking():
@@ -601,7 +603,15 @@ def room_add():
     username = request.json['username']
     user = hotel.get_user_by_username(username)
     if user and user.account.role == "admin":
-        room = Room(request.json['id'], request.json['type'], int(request.json['price']), int(request.json['capacity']), request.json['image'], request.json['description'], request.json['details'])
+        room = Room(
+            request.json['id'], 
+            request.json['type'], 
+            int(request.json['price']), 
+            int(request.json['capacity']), 
+            request.json['image'], 
+            request.json['description'], 
+            request.json['details']
+        )
         response = hotel.add_room(room)
         if response:
             return jsonify({"message": "Room added"}), 201
@@ -677,9 +687,23 @@ def user_add():
     if user and user.account.role == "admin":
         role = request.json['role']
         if role == "admin":
-            new_user = Admin(request.json['name'], request.json['email'], request.json['phone'], Account(request.json['username_new'], request.json['password'], role), request.json['position'])
+            new_user = Admin(
+                request.json['name'], 
+                request.json['email'], 
+                request.json['phone'], 
+                Account(request.json['username_new'], 
+                request.json['password'], role), 
+                request.json['position']
+            )
         else:
-            new_user = Customer(request.json['name'], request.json['email'], request.json['phone'], Account(request.json['username_new'], request.json['password'], role))
+            new_user = Customer(
+                request.json['name'], 
+                request.json['email'], 
+                request.json['phone'], 
+                Account(request.json['username_new'], 
+                request.json['password'], 
+                role)
+            )
         response = hotel.add_user(new_user)
         if response:
             return jsonify({"message": "User added"}), 201
